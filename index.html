@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Asistencia HEPA</title>
+    
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Librería para leer códigos QR -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    
+    <!-- Librería para generar códigos QR (para el admin) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <!-- Librerías para exportar a PDF y Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        /* Estilos personalizados y animaciones */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
+        .hepa-blue { background-color: #0000ff; }
+        .text-hepa-blue { color: #0000ff; }
+        
+        .view { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .view.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Estilos para el lector QR */
+        #qr-reader { width: 100%; border-radius: 0.5rem; overflow: hidden; border: none !important; }
+        #qr-reader img { display: none; }
+        #qr-reader__scan_region { background: white; }
+        #qr-reader__dashboard { padding: 10px !important; background: #f8fafc; }
+        #qr-reader button { background-color: #0000ff; color: white; padding: 8px 16px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px;}
+
+        /* Toast de notificaciones */
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 50; left: 50%; transform: translateX(-50%);
+            bottom: 30px; font-size: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: visibility 0.5s, opacity 0.5s linear; opacity: 0;
+        }
+        #toast.show { visibility: visible; opacity: 1; }
+        #toast.success { background-color: #10b981; }
+        #toast.error { background-color: #ef4444; }
+    </style>
+</head>
+<body class="text-gray-800 h-screen overflow-hidden flex flex-col">
+
+    <!-- BARRA SUPERIOR -->
+    <header class="hepa-blue text-white p-4 shadow-md flex justify-between items-center z-10 shrink-0">
+        <div class="flex items-center gap-3 cursor-pointer select-none" onclick="triggerSecretLogin()">
+            <div class="bg-white rounded-full p-2 h-10 w-10 flex items-center justify-center">
+                <i class="fa-solid fa-car text-hepa-blue text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold leading-tight tracking-wide">Refaccionarias HEPA</h1>
+                <p class="text-xs text-blue-200">Control de Asistencia</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- ÁREA DE CONTENIDO (Views) -->
+    <main class="flex-1 overflow-y-auto relative w-full max-w-md mx-auto bg-white shadow-xl">
+
+        <!-- VISTA: SELECCIÓN DE ROL (NUEVA PANTALLA INICIAL) -->
+        <div id="view-role-selection" class="view active h-full flex flex-col justify-center p-6">
+            <div class="text-center mb-8">
+                <img src="img/Logo_HEPA.png" alt="Logo HEPA" class="h-32 mx-auto mb-6 object-contain drop-shadow-md">
+                <h2 class="text-2xl font-bold text-gray-800">Bienvenido</h2>
+                <p class="text-gray-500 text-sm">Por favor, selecciona tu perfil</p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="selectRole('FIJO')" class="bg-white border-2 border-gray-200 text-gray-700 py-6 rounded-xl font-bold shadow-sm transition hover:border-blue-600 hover:text-blue-700 flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-user-tie text-4xl text-hepa-blue"></i> Personal Fijo
+                </button>
+                <button onclick="selectRole('BECARIOS')" class="bg-white border-2 border-gray-200 text-gray-700 py-6 rounded-xl font-bold shadow-sm transition hover:border-green-600 hover:text-green-700 flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-user-graduate text-4xl text-green-600"></i> Becarios
+                </button>
+            </div>
+        </div>
+
+        <!-- VISTA: ESCÁNER PRINCIPAL -->
+        <div id="view-scanner" class="view hidden h-full flex flex-col p-6">
+            <button onclick="showView('role-selection')" class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 z-10">
+                <i class="fa-solid fa-arrow-left text-xl"></i>
+            </button>
+            <div class="text-center mb-6 mt-4">
+                <h2 class="text-2xl font-bold text-gray-800" id="scanner-title">Registro</h2>
+                <p class="text-gray-500 text-sm">Selecciona acción y escanea QR</p>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button onclick="selectAction('ENTRADA')" id="btn-ENTRADA" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition hover:border-blue-500 hover:text-blue-600 flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket text-2xl"></i> Entrada
+                </button>
+                <button onclick="selectAction('COMIDA_SALIDA')" id="btn-COMIDA_SALIDA" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition hover:border-yellow-500 hover:text-yellow-600 flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-utensils text-2xl"></i> A Comer
+                </button>
+                <button onclick="selectAction('COMIDA_REGRESO')" id="btn-COMIDA_REGRESO" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition hover:border-green-500 hover:text-green-600 flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-rotate-left text-2xl"></i> Regreso
+                </button>
+                <button onclick="selectAction('SALIDA')" id="btn-SALIDA" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition hover:border-red-500 hover:text-red-600 flex flex-col items-center gap-2">
+                    <i class="fa-solid fa-right-from-bracket text-2xl"></i> Salida
+                </button>
+            </div>
+
+            <!-- Contenedor del Escáner -->
+            <div id="scanner-container" class="hidden flex-col items-center w-full">
+                <div class="w-full bg-gray-100 rounded-xl overflow-hidden shadow-inner border-2 border-hepa-blue">
+                    <div id="qr-reader"></div>
+                </div>
+                <button onclick="stopScanner()" class="mt-4 text-red-500 font-semibold hover:underline">
+                    Cancelar Escaneo
+                </button>
+            </div>
+
+            <div id="waiting-action" class="flex-1 flex flex-col items-center justify-center text-gray-400">
+                <i class="fa-solid fa-qrcode text-6xl mb-4 opacity-50"></i>
+                <p>Selecciona un botón arriba para activar la cámara</p>
+            </div>
+
+            <!-- Respaldo Manual -->
+            <div class="mt-auto pt-6 border-t text-center">
+                <button onclick="toggleManualEntry()" class="text-sm text-blue-600 font-semibold">¿Falla la cámara? Ingreso Manual</button>
+                <div id="manual-entry" class="hidden mt-3 flex gap-2">
+                    <input type="text" id="manual-id" placeholder="ID del Empleado (Ej. EMP-001)" class="flex-1 border p-2 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                    <button onclick="processManualEntry()" class="bg-blue-600 text-white px-4 rounded-lg font-bold">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA: LOGIN ADMIN -->
+        <div id="view-admin-login" class="view hidden h-full flex flex-col items-center justify-center p-6">
+            <button onclick="showView('role-selection')" class="absolute top-4 left-4 text-gray-500 hover:text-gray-800">
+                <i class="fa-solid fa-arrow-left text-xl"></i> Volver
+            </button>
+            <div class="bg-gray-50 p-8 rounded-2xl shadow-md w-full max-w-xs text-center border">
+                <i class="fa-solid fa-shield-halved text-4xl text-hepa-blue mb-4"></i>
+                <h2 class="text-xl font-bold mb-6">Acceso Administrador</h2>
+                <input type="email" id="admin-email" placeholder="Correo Administrador" class="w-full border-2 border-gray-300 p-3 rounded-xl mb-2 text-lg focus:border-hepa-blue focus:outline-none">
+                <input type="password" id="admin-password" placeholder="Contraseña" class="w-full border-2 border-gray-300 p-3 rounded-xl mb-4 text-lg focus:border-hepa-blue focus:outline-none">
+                <button onclick="loginAdmin()" class="w-full hepa-blue text-white font-bold py-3 rounded-xl shadow-md hover:bg-blue-800 transition">
+                    Ingresar
+                </button>
+            </div>
+        </div>
+
+        <!-- VISTA: DASHBOARD ADMIN -->
+        <div id="view-admin-dashboard" class="view hidden h-full flex flex-col">
+            <div class="bg-gray-100 p-2 flex justify-between items-center border-b">
+                <button onclick="logoutAdmin()" class="text-gray-600 p-2"><i class="fa-solid fa-home"></i> Inicio</button>
+                <div class="flex bg-white rounded-lg shadow-sm p-1">
+                    <button onclick="switchAdminTab('logs')" id="tab-logs" class="px-4 py-1 rounded-md text-sm font-bold hepa-blue text-white">Registros</button>
+                    <button onclick="switchAdminTab('employees')" id="tab-employees" class="px-4 py-1 rounded-md text-sm font-bold text-gray-500 hover:bg-gray-50">Empleados</button>
+                </div>
+                <button onclick="logoutAdmin()" class="text-red-500 p-2"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+
+            <!-- Tab Registros -->
+            <div id="admin-logs" class="flex-1 p-4 overflow-y-auto bg-gray-50">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg">Historial de Asistencia</h3>
+                    <div class="flex gap-2">
+                        <button onclick="exportToExcel()" class="bg-green-600 text-white p-2 rounded shadow hover:bg-green-700" title="Exportar Excel"><i class="fa-solid fa-file-excel"></i></button>
+                        <button onclick="exportToPDF()" class="bg-red-600 text-white p-2 rounded shadow hover:bg-red-700" title="Exportar PDF"><i class="fa-solid fa-file-pdf"></i></button>
+                        <button onclick="shareData()" class="bg-blue-500 text-white p-2 rounded shadow hover:bg-blue-600" title="Compartir"><i class="fa-solid fa-share-nodes"></i></button>
+                    </div>
+                </div>
+                
+                <!-- PANEL DE FILTROS -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border mb-4">
+                    <h4 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Filtros de Búsqueda</h4>
+                    
+                    <!-- Buscador Texto -->
+                    <div class="mb-3">
+                        <input type="text" id="filter-text" placeholder="Buscar por Nombre o ID..." class="w-full border-2 border-gray-200 p-2 rounded-lg text-sm focus:outline-none focus:border-hepa-blue transition">
+                    </div>
+
+                    <!-- Fechas -->
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="text-xs text-gray-400 font-bold ml-1">Desde:</label>
+                            <input type="date" id="filter-date-start" class="w-full border-2 border-gray-200 p-2 rounded-lg text-sm focus:outline-none focus:border-hepa-blue transition">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-400 font-bold ml-1">Hasta:</label>
+                            <input type="date" id="filter-date-end" class="w-full border-2 border-gray-200 p-2 rounded-lg text-sm focus:outline-none focus:border-hepa-blue transition">
+                        </div>
+                    </div>
+
+                    <!-- Checkboxes Acciones -->
+                    <div class="mb-4">
+                        <label class="text-xs text-gray-400 font-bold ml-1 block mb-2">Mostrar Acciones:</label>
+                        <div class="flex flex-wrap gap-3">
+                            <label class="flex items-center gap-1 text-sm bg-gray-50 px-2 py-1 rounded border cursor-pointer hover:bg-gray-100"><input type="checkbox" class="filter-action accent-blue-600" value="ENTRADA" checked> Entrada</label>
+                            <label class="flex items-center gap-1 text-sm bg-gray-50 px-2 py-1 rounded border cursor-pointer hover:bg-gray-100"><input type="checkbox" class="filter-action accent-yellow-500" value="COMIDA_SALIDA" checked> Salida Comida</label>
+                            <label class="flex items-center gap-1 text-sm bg-gray-50 px-2 py-1 rounded border cursor-pointer hover:bg-gray-100"><input type="checkbox" class="filter-action accent-green-500" value="COMIDA_REGRESO" checked> Regreso Comida</label>
+                            <label class="flex items-center gap-1 text-sm bg-gray-50 px-2 py-1 rounded border cursor-pointer hover:bg-gray-100"><input type="checkbox" class="filter-action accent-red-500" value="SALIDA" checked> Salida</label>
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="flex gap-2">
+                        <button onclick="applyFilters()" class="hepa-blue text-white px-4 py-2 rounded-lg text-sm font-bold flex-1 shadow hover:bg-blue-800 transition">
+                            <i class="fa-solid fa-filter mr-1"></i> Filtrar Resultados
+                        </button>
+                        <button onclick="clearFilters()" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-200 transition border" title="Limpiar Filtros">
+                            <i class="fa-solid fa-eraser"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                    <div id="logs-container" class="divide-y max-h-[60vh] overflow-y-auto">
+                        <!-- Los registros se inyectarán aquí -->
+                        <div class="p-4 text-center text-gray-400 text-sm">Cargando registros...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Empleados -->
+            <div id="admin-employees" class="flex-1 p-4 overflow-y-auto bg-gray-50 hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg">Equipo HEPA</h3>
+                    <button onclick="prepareAddEmployee()" class="hepa-blue text-white px-3 py-1 rounded shadow text-sm font-bold">
+                        <i class="fa-solid fa-plus"></i> Nuevo
+                    </button>
+                </div>
+                <div id="employees-container" class="grid grid-cols-1 gap-3">
+                    <!-- Los empleados se inyectarán aquí -->
+                    <div class="text-center text-gray-400 text-sm">Cargando empleados...</div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL: AGREGAR EMPLEADO -->
+    <div id="modal-add-employee" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
+            <button onclick="closeModal('modal-add-employee')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 id="modal-title" class="text-xl font-bold mb-4">Nuevo Empleado</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-gray-500 font-bold">ID / Matrícula</label>
+                    <input type="text" id="new-emp-id" placeholder="Ej. HEPA-001" class="w-full border p-2 rounded-lg focus:outline-none focus:border-blue-500 uppercase">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 font-bold">Nombre Completo</label>
+                    <input type="text" id="new-emp-name" placeholder="Juan Pérez" class="w-full border p-2 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 font-bold">Cargo</label>
+                    <input type="text" id="new-emp-role" placeholder="Mecánico, Ventas, etc." class="w-full border p-2 rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <button id="btn-save-employee" onclick="saveEmployee()" class="w-full hepa-blue text-white font-bold py-2 rounded-lg shadow-md mt-2">
+                    Guardar y Generar QR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VER CÓDIGO QR -->
+    <div id="modal-view-qr" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl relative text-center">
+            <button onclick="closeModal('modal-view-qr')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 class="text-lg font-bold text-gray-800 mb-1" id="qr-emp-name">Nombre</h3>
+            <p class="text-sm text-gray-500 mb-4" id="qr-emp-id">ID</p>
+            <div id="qr-code-canvas" class="flex justify-center bg-gray-100 p-4 rounded-xl border border-dashed border-gray-300"></div>
+            <p class="text-xs text-gray-400 mt-4">Imprime este código para el empleado.</p>
+        </div>
+    </div>
+
+    <!-- Notificaciones UI -->
+    <div id="toast">Mensaje</div>
+
+    <!-- ================= LOGICA JAVASCRIPT & FIREBASE ================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken, signInWithEmailAndPassword, signOut, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, deleteDoc, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Configuración de entorno y Firebase
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDIGy-ScMQyta3prPdUnId7nTGa3fQxwCQ",
+            authDomain: "asistenciabecarioshepa.firebaseapp.com",
+            projectId: "asistenciabecarioshepa",
+            storageBucket: "asistenciabecarioshepa.firebasestorage.app",
+            messagingSenderId: "179769905326",
+            appId: "1:179769905326:web:652673b26c97e782539d3f"
+            };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = firebaseConfig.appId;
+
+        // Rutas estrictas solicitadas
+        const employeesPath = `artifacts/${appId}/public/data/hepa_employees`;
+        const logsPath = `artifacts/${appId}/public/data/hepa_logs`;
+
+        // Variables de estado
+        let currentUser = null;
+        let employeesData = [];
+        let editingEmployeeId = null; // Para saber si estamos editando
+        let logsData = [];
+        let currentFilteredLogs = null; // Almacena el estado actual de los filtros
+        let currentAction = null;
+        let html5QrcodeScanner = null;
+        let unsubscribeLogs = null;
+
+        // Inicialización de Autenticación
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth error:", error);
+                window.showToast("Error de conexión a la base de datos", "error");
+            }
+        }
+
+        // Listener de Autenticación y Carga de Datos
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                loadFirebaseData();
+            }
+        });
+
+        function loadFirebaseData() {
+            if (!currentUser) return;
+
+            // Escuchar Empleados
+            const empRef = collection(db, employeesPath);
+            onSnapshot(empRef, (snapshot) => {
+                employeesData = snapshot.docs.map(doc => ({ firebaseId: doc.id, ...doc.data() }));
+                window.renderEmployees();
+            }, (error) => console.error("Error employees:", error));
+        }
+
+        function subscribeToLogs() {
+            if (unsubscribeLogs) return;
+            const logRef = collection(db, logsPath);
+            unsubscribeLogs = onSnapshot(logRef, (snapshot) => {
+                logsData = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    // Convertir Timestamp de Firestore a milisegundos para ordenar correctamente
+                    const timestamp = data.serverTimestamp ? data.serverTimestamp.toMillis() : (data.timestamp || Date.now());
+                    return { firebaseId: doc.id, ...data, timestamp };
+                });
+                // Ordenar en memoria (más recientes primero)
+                logsData.sort((a, b) => b.timestamp - a.timestamp);
+                window.applyFilters(); // Aplicar filtros al recibir nuevos datos
+            }, (error) => console.error("Error logs:", error));
+        }
+
+        function unsubscribeFromLogs() {
+            if (unsubscribeLogs) unsubscribeLogs();
+            unsubscribeLogs = null;
+            logsData = [];
+            currentFilteredLogs = null;
+            window.renderLogs([]);
+        }
+
+        // --- UTILIDADES DE SEGURIDAD ---
+        // Evita inyección de código HTML malicioso en nombres o IDs
+        function escapeHtml(text) {
+            if (!text) return text;
+            return text.toString().replace(/&/g, "&amp;")
+                       .replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                       .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // --- FUNCIONES EXPUESTAS A WINDOW PARA HTML ---
+
+        window.showToast = (msg, type = 'success') => {
+            const toast = document.getElementById("toast");
+            toast.className = `show ${type}`;
+            toast.innerText = msg;
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        };
+
+        window.showView = (viewId) => {
+            // Regla rígida: Ocultar todo con 'hidden' primero
+            document.querySelectorAll('.view').forEach(v => {
+                v.classList.remove('active');
+                v.classList.add('hidden');
+            });
+            
+            const target = document.getElementById(`view-${viewId}`);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('active');
+            }
+
+            // Limpieza específica al volver al inicio
+            if (viewId === 'role-selection') {
+                window.stopScanner();
+            }
+
+            if (viewId === 'scanner') {
+                document.getElementById('admin-email').value = '';
+                document.getElementById('admin-password').value = '';
+                window.stopScanner(); // Detiene cámara al salir
+                currentAction = null;
+                updateActionUI();
+            }
+        };
+
+        // --- ACCESO SECRETO ADMIN (5 Clics en el logo) ---
+        let secretClicks = 0;
+        let secretTimer = null;
+        window.triggerSecretLogin = () => {
+            secretClicks++;
+            clearTimeout(secretTimer);
+            secretTimer = setTimeout(() => { secretClicks = 0; }, 2000);
+            if (secretClicks === 5) {
+                secretClicks = 0;
+                window.showView('admin-login');
+            }
+        };
+
+        // --- SELECCIÓN DE ROL ---
+        window.selectRole = (role) => {
+            const lunchBtns = ['btn-COMIDA_SALIDA', 'btn-COMIDA_REGRESO'];
+            
+            if (role === 'FIJO') {
+                lunchBtns.forEach(id => document.getElementById(id).classList.add('hidden'));
+                document.getElementById('scanner-title').innerText = "Personal Fijo";
+            } else {
+                // Becarios
+                lunchBtns.forEach(id => document.getElementById(id).classList.remove('hidden'));
+                document.getElementById('scanner-title').innerText = "Becarios";
+            }
+            
+            window.showView('scanner');
+        };
+
+        // --- LÓGICA DEL ESCÁNER Y REGISTRO ---
+
+        window.selectAction = (action) => {
+            currentAction = action;
+            updateActionUI();
+            startScanner();
+        };
+
+        function updateActionUI() {
+            // Reset styles
+            ['ENTRADA', 'COMIDA_SALIDA', 'COMIDA_REGRESO', 'SALIDA'].forEach(act => {
+                const btn = document.getElementById(`btn-${act}`);
+                btn.classList.remove('border-blue-500', 'border-yellow-500', 'border-green-500', 'border-red-500', 'bg-gray-50', 'scale-95');
+            });
+            
+            document.getElementById('waiting-action').classList.toggle('hidden', currentAction !== null);
+            document.getElementById('scanner-container').classList.toggle('hidden', currentAction === null);
+
+            if (currentAction) {
+                const activeBtn = document.getElementById(`btn-${currentAction}`);
+                activeBtn.classList.add('scale-95', 'bg-gray-50');
+                if(currentAction === 'ENTRADA') activeBtn.classList.add('border-blue-500');
+                if(currentAction === 'COMIDA_SALIDA') activeBtn.classList.add('border-yellow-500');
+                if(currentAction === 'COMIDA_REGRESO') activeBtn.classList.add('border-green-500');
+                if(currentAction === 'SALIDA') activeBtn.classList.add('border-red-500');
+            }
+        }
+
+        function startScanner() {
+            if (html5QrcodeScanner) window.stopScanner();
+            
+            // Usamos HTML5 Qrcode
+            const formatsToSupport = [ Html5QrcodeSupportedFormats.QR_CODE ];
+            html5QrcodeScanner = new Html5Qrcode("qr-reader");
+            
+            const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
+            
+            html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess)
+            .catch(err => {
+                console.warn("No se pudo iniciar la cámara automáticamente", err);
+                window.showToast("Cámara no detectada. Usa el ingreso manual.", "error");
+                window.stopScanner();
+                document.getElementById('manual-entry').classList.remove('hidden');
+            });
+        }
+
+        window.stopScanner = () => {
+            if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+                html5QrcodeScanner.stop().catch(console.error);
+            }
+            document.getElementById('scanner-container').classList.add('hidden');
+            document.getElementById('waiting-action').classList.remove('hidden');
+            currentAction = null;
+            updateActionUI();
+        };
+
+        function onScanSuccess(decodedText) {
+            // Evitar múltiples escaneos rápidos
+            if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
+                html5QrcodeScanner.stop().catch(console.error);
+            }
+            document.getElementById('scanner-container').classList.add('hidden');
+            document.getElementById('waiting-action').classList.remove('hidden');
+            processAttendance(decodedText);
+        }
+
+        window.toggleManualEntry = () => {
+            const container = document.getElementById('manual-entry');
+            container.classList.toggle('hidden');
+        };
+
+        window.processManualEntry = () => {
+            const idInput = document.getElementById('manual-id').value.trim().toUpperCase();
+            if (!idInput) return;
+            if (!currentAction) {
+                window.showToast("Selecciona una acción (Entrada/Salida) primero", "error");
+                return;
+            }
+            processAttendance(idInput);
+            document.getElementById('manual-id').value = '';
+        };
+
+        async function processAttendance(empId) {
+            if (!currentUser) { window.showToast("Sistema desconectado", "error"); return; }
+            
+            // Buscar empleado
+            const employee = employeesData.find(e => e.id.toUpperCase() === empId.toUpperCase());
+            if (!employee) {
+                window.showToast(`ID no registrado: ${empId}`, "error");
+                // Reset UI
+                currentAction = null; updateActionUI();
+                return;
+            }
+
+            // Registrar en Firebase
+            try {
+                const logData = {
+                    employeeId: employee.id,
+                    employeeName: employee.name,
+                    employeeRole: employee.role,
+                    action: currentAction,
+                    timestamp: Date.now(), // Respaldo local
+                    serverTimestamp: serverTimestamp(), // HORA SEGURA DEL SERVIDOR (Evita trampas de horario)
+                    dateString: new Date().toLocaleDateString('es-MX'),
+                    timeString: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+                };
+
+                await addDoc(collection(db, logsPath), logData);
+                
+                // Mensaje amigable basado en acción
+                let actionText = "";
+                if(currentAction === 'ENTRADA') actionText = "Entrada registrada";
+                if(currentAction === 'COMIDA_SALIDA') actionText = "Salida a comer";
+                if(currentAction === 'COMIDA_REGRESO') actionText = "Regreso de comida";
+                if(currentAction === 'SALIDA') actionText = "Salida final registrada";
+
+                window.showToast(`✅ ${actionText} - ${employee.name}`);
+                
+                // Recargar la página automáticamente para reiniciar el ciclo
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+
+            } catch (error) {
+                console.error("Error guardando registro", error);
+                window.showToast("Error al guardar el registro", "error");
+            }
+        }
+
+        // --- LÓGICA DE ADMINISTRADOR ---
+
+        window.loginAdmin = async () => {
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+
+            if (!email || !password) {
+                window.showToast("Ingresa correo y contraseña", "error");
+                return;
+            }
+
+            try {
+                // Configurar persistencia solo para la sesión actual (se borra al cerrar pestaña)
+                await setPersistence(auth, browserSessionPersistence);
+                await signInWithEmailAndPassword(auth, email, password);
+                
+                // Limpiar campos por seguridad
+                document.getElementById('admin-email').value = '';
+                document.getElementById('admin-password').value = '';
+
+                subscribeToLogs();
+                window.showView('admin-dashboard');
+            } catch (error) {
+                console.error("Login error:", error);
+                window.showToast("Credenciales incorrectas", "error");
+            }
+        };
+
+        window.logoutAdmin = async () => {
+            unsubscribeFromLogs();
+            await signOut(auth);
+            await signInAnonymously(auth); // Regresar a modo kiosco (anónimo)
+            window.showView('role-selection');
+        };
+
+        window.switchAdminTab = (tab) => {
+            document.getElementById('admin-logs').classList.add('hidden');
+            document.getElementById('admin-employees').classList.add('hidden');
+            document.getElementById(`admin-${tab}`).classList.remove('hidden');
+
+            document.getElementById('tab-logs').className = "px-4 py-1 rounded-md text-sm font-bold text-gray-500 hover:bg-gray-50";
+            document.getElementById('tab-employees').className = "px-4 py-1 rounded-md text-sm font-bold text-gray-500 hover:bg-gray-50";
+            
+            document.getElementById(`tab-${tab}`).className = "px-4 py-1 rounded-md text-sm font-bold hepa-blue text-white shadow";
+        };
+
+        // --- LÓGICA DE FILTROS ---
+        window.applyFilters = () => {
+            const text = document.getElementById('filter-text').value.toLowerCase();
+            const dateStartVal = document.getElementById('filter-date-start').value;
+            const dateEndVal = document.getElementById('filter-date-end').value;
+            const selectedActions = Array.from(document.querySelectorAll('.filter-action:checked')).map(cb => cb.value);
+
+            currentFilteredLogs = logsData.filter(log => {
+                // 1. Filtro Texto (Nombre o ID)
+                const matchText = log.employeeName.toLowerCase().includes(text) || log.employeeId.toLowerCase().includes(text);
+                
+                // 2. Filtro Acción (Checkboxes)
+                const matchAction = selectedActions.includes(log.action);
+
+                // 3. Filtro Fecha (Rango)
+                let matchDate = true;
+                if (dateStartVal || dateEndVal) {
+                    const logDate = new Date(log.timestamp);
+                    logDate.setHours(0,0,0,0); // Normalizar a medianoche para comparar solo fechas
+                    
+                    if (dateStartVal) {
+                        const [y, m, d] = dateStartVal.split('-').map(Number);
+                        const startDate = new Date(y, m-1, d);
+                        if (logDate < startDate) matchDate = false;
+                    }
+                    if (dateEndVal && matchDate) {
+                        const [y, m, d] = dateEndVal.split('-').map(Number);
+                        const endDate = new Date(y, m-1, d);
+                        if (logDate > endDate) matchDate = false;
+                    }
+                }
+
+                return matchText && matchAction && matchDate;
+            });
+
+            window.renderLogs(currentFilteredLogs);
+        };
+
+        window.clearFilters = () => {
+            document.getElementById('filter-text').value = '';
+            document.getElementById('filter-date-start').value = '';
+            document.getElementById('filter-date-end').value = '';
+            document.querySelectorAll('.filter-action').forEach(cb => cb.checked = true);
+            window.applyFilters();
+        };
+
+        // --- RENDERIZADO DE DATOS ---
+
+        window.renderLogs = (data = logsData) => {
+            const container = document.getElementById('logs-container');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="p-8 text-center text-gray-400 text-sm flex flex-col items-center"><i class="fa-solid fa-filter-circle-xmark text-3xl mb-2"></i>No se encontraron registros con estos filtros.</div>';
+                return;
+            }
+
+            container.innerHTML = data.map(log => {
+                let iconStr = '<i class="fa-solid fa-circle-check text-gray-400"></i>';
+                let colorClass = 'text-gray-800';
+                
+                if(log.action === 'ENTRADA') { iconStr = '<i class="fa-solid fa-right-to-bracket text-blue-500"></i>'; colorClass = 'text-blue-700'; }
+                if(log.action === 'COMIDA_SALIDA') { iconStr = '<i class="fa-solid fa-utensils text-yellow-500"></i>'; colorClass = 'text-yellow-700'; }
+                if(log.action === 'COMIDA_REGRESO') { iconStr = '<i class="fa-solid fa-rotate-left text-green-500"></i>'; colorClass = 'text-green-700'; }
+                if(log.action === 'SALIDA') { iconStr = '<i class="fa-solid fa-right-from-bracket text-red-500"></i>'; colorClass = 'text-red-700'; }
+
+                return `
+                <div class="p-3 flex items-center justify-between hover:bg-gray-50">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center">
+                            ${iconStr}
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-gray-800">${escapeHtml(log.employeeName)}</p>
+                            <p class="text-xs text-gray-500 font-mono">${escapeHtml(log.employeeId)} - ${log.action}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="text-right">
+                            <p class="text-sm font-bold ${colorClass}">${log.timeString}</p>
+                            <p class="text-xs text-gray-400">${log.dateString}</p>
+                        </div>
+                        <button onclick="deleteLog('${log.firebaseId}')" class="text-gray-300 hover:text-red-500 p-2 transition" title="Eliminar registro">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        };
+
+        window.renderEmployees = () => {
+            const container = document.getElementById('employees-container');
+            if (employeesData.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 text-sm p-4 bg-white rounded-xl shadow-sm border">No hay empleados registrados.</div>';
+                return;
+            }
+
+            container.innerHTML = employeesData.map(emp => `
+                <div class="bg-white p-3 rounded-xl shadow-sm border flex items-center justify-between">
+                    <div>
+                        <p class="font-bold text-gray-800">${escapeHtml(emp.name)}</p>
+                        <p class="text-xs text-gray-500">ID: ${escapeHtml(emp.id)} | ${escapeHtml(emp.role)}</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="viewEmployeeQR('${emp.id}', '${emp.name}')" class="bg-gray-100 text-hepa-blue p-2 rounded-lg hover:bg-gray-200" title="Ver QR">
+                            <i class="fa-solid fa-qrcode"></i>
+                        </button>
+                        <button onclick="editEmployee('${emp.firebaseId}')" class="bg-blue-50 text-blue-500 p-2 rounded-lg hover:bg-blue-100" title="Editar">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="deleteEmployee('${emp.firebaseId}')" class="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100" title="Eliminar">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        // --- GESTIÓN DE EMPLEADOS ---
+
+        window.openModal = (id) => { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); };
+        window.closeModal = (id) => { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); };
+
+        window.prepareAddEmployee = () => {
+            editingEmployeeId = null;
+            document.getElementById('new-emp-id').value = '';
+            document.getElementById('new-emp-name').value = '';
+            document.getElementById('new-emp-role').value = '';
+            
+            document.getElementById('modal-title').innerText = "Nuevo Empleado";
+            document.getElementById('btn-save-employee').innerText = "Guardar y Generar QR";
+            window.openModal('modal-add-employee');
+        };
+
+        window.editEmployee = (firebaseId) => {
+            const emp = employeesData.find(e => e.firebaseId === firebaseId);
+            if (!emp) return;
+            
+            editingEmployeeId = firebaseId;
+            document.getElementById('new-emp-id').value = emp.id;
+            document.getElementById('new-emp-name').value = emp.name;
+            document.getElementById('new-emp-role').value = emp.role;
+            
+            document.getElementById('modal-title').innerText = "Editar Empleado";
+            document.getElementById('btn-save-employee').innerText = "Actualizar Datos";
+            window.openModal('modal-add-employee');
+        };
+
+        window.saveEmployee = async () => {
+            if (!currentUser) return;
+            const id = document.getElementById('new-emp-id').value.trim().toUpperCase();
+            const name = document.getElementById('new-emp-name').value.trim();
+            const role = document.getElementById('new-emp-role').value.trim();
+
+            if (!id || !name || !role) { window.showToast("Llena todos los campos", "error"); return; }
+            
+            // Validar duplicados (excluyendo al actual si se está editando)
+            const isDuplicate = employeesData.some(e => e.id === id && e.firebaseId !== editingEmployeeId);
+            if (isDuplicate) { window.showToast("Ese ID ya existe", "error"); return; }
+
+            try {
+                if (editingEmployeeId) {
+                    // Actualizar existente
+                    await updateDoc(doc(db, employeesPath, editingEmployeeId), { id, name, role });
+                    window.showToast("Empleado actualizado");
+                } else {
+                    // Crear nuevo
+                    await addDoc(collection(db, employeesPath), { id, name, role, createdAt: Date.now() });
+                    window.showToast("Empleado guardado");
+                    // Mostrar QR inmediatamente solo si es nuevo
+                    window.viewEmployeeQR(id, name);
+                }
+                window.closeModal('modal-add-employee');
+            } catch(e) { console.error(e); window.showToast("Error al guardar", "error"); }
+        };
+
+        window.deleteEmployee = async (firebaseId) => {
+            if (!confirm("¿Estás seguro de eliminar a este empleado? Esta acción no se puede deshacer.")) return;
+            try {
+                await deleteDoc(doc(db, employeesPath, firebaseId));
+                window.showToast("Empleado eliminado");
+            } catch(e) { console.error(e); window.showToast("Error al eliminar", "error"); }
+        };
+
+        window.deleteLog = async (firebaseId) => {
+            if (!confirm("¿Eliminar este registro de asistencia?")) return;
+            try {
+                await deleteDoc(doc(db, logsPath, firebaseId));
+                window.showToast("Registro eliminado");
+            } catch(e) { console.error(e); window.showToast("Error al eliminar", "error"); }
+        };
+
+        // Generador QR
+        let qrcodeInstance = null;
+        window.viewEmployeeQR = (empId, empName) => {
+            document.getElementById('qr-emp-name').innerText = empName;
+            document.getElementById('qr-emp-id').innerText = `ID: ${empId}`;
+            
+            const canvasContainer = document.getElementById('qr-code-canvas');
+            canvasContainer.innerHTML = ''; // limpiar anterior
+            
+            qrcodeInstance = new QRCode(canvasContainer, {
+                text: empId,
+                width: 150,
+                height: 150,
+                colorDark : "#0000ff", // HEPA Blue
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+            
+            window.openModal('modal-view-qr');
+        };
+
+        // --- EXPORTACIÓN Y COMPARTIR ---
+
+        function prepareDataForExport() {
+            // Transformar datos para tablas
+            // Usar datos filtrados si existen, de lo contrario usar todos
+            return (currentFilteredLogs !== null ? currentFilteredLogs : logsData).map(log => [
+                log.dateString,
+                log.timeString,
+                log.employeeId,
+                log.employeeName,
+                log.action
+            ]);
+        }
+
+        window.exportToPDF = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text("Refaccionarias HEPA - Reporte de Asistencia", 14, 22);
+            doc.setFontSize(10);
+            doc.text(`Generado: ${new Date().toLocaleString('es-MX')}`, 14, 30);
+
+            doc.autoTable({
+                startY: 35,
+                head: [['Fecha', 'Hora', 'ID', 'Empleado', 'Acción']],
+                body: prepareDataForExport(),
+                headStyles: { fillColor: [0, 0, 255] } // HEPA Blue
+            });
+
+            doc.save("HEPA_Asistencia.pdf");
+            window.showToast("PDF Descargado");
+        };
+
+        window.exportToExcel = () => {
+            const data = [['Fecha', 'Hora', 'ID', 'Empleado', 'Acción'], ...prepareDataForExport()];
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Asistencias");
+            XLSX.writeFile(wb, "HEPA_Asistencia.xlsx");
+            window.showToast("Excel Descargado");
+        };
+
+        window.shareData = async () => {
+            // Intentamos compartir un texto resumen, ya que compartir archivos dinámicos (File) vía Web Share API 
+            // no es compatible en todos los navegadores móviles aún.
+            if (navigator.share) {
+                const dataToShare = currentFilteredLogs !== null ? currentFilteredLogs : logsData;
+                const textSummary = `Resumen HEPA:\nTotal registros: ${dataToShare.length}\nÚltimo registro: ${dataToShare[0]?.employeeName} a las ${dataToShare[0]?.timeString}`;
+                try {
+                    await navigator.share({
+                        title: 'Reporte Asistencia HEPA',
+                        text: textSummary,
+                    });
+                } catch (err) {
+                    console.log("Compartir cancelado o no soportado");
+                }
+            } else {
+                window.showToast("Tu navegador no soporta compartir directamente", "error");
+            }
+        };
+
+        // Iniciar App
+        initAuth();
+
+    </script>
+</body>
+</html>
