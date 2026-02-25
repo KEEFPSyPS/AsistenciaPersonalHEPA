@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Asistencia HEPA</title>
+
+    <!-- Configuración PWA (Modo App Nativa) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="img/Logo_HEPA.png">
     
     <!-- Tailwind CSS para el diseño -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -904,6 +910,12 @@ const appId = firebaseConfig.appId;
 
         // Iniciar App
         initAuth();
+
+        // Registrar Service Worker para permitir instalación
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log("Service Worker Registrado"));
+        }
 
     </script>
 </body>
