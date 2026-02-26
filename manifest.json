@@ -1,6 +1,6 @@
 {
   "name": "Refaccionarias HEPA",
-  "short_name": "HEPA",
+  "short_name": "ASISTENCIA HEPA",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -8,14 +8,14 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "img/Logo_HEPA.png",
+      "src": "img/Logo_HEPA.jpg",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/jpeg"
     },
     {
-      "src": "img/Logo_HEPA.png",
+      "src": "img/Logo_HEPA.jpg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/jpeg"
     }
   ]
 }
