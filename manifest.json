@@ -8,14 +8,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "img/Logo_HEPA.jpg",
+      "src": "img/Logo_HEPA.png",
       "sizes": "192x192",
-      "type": "image/jpeg"
+      "type": "image/png"
     },
     {
       "src": "img/Logo_HEPA.png",
       "sizes": "512x512",
       "type": "image/png"
     }
+
   ]
 }
