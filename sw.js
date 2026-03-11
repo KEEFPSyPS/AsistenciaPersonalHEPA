@@ -1,9 +1,21 @@
 // Service Worker con Control de Versiones
-const APP_VERSION = 'hepa-app-v1.4'; // CAMBIA ESTO cuando hagas actualizaciones
+const APP_VERSION = 'hepa-app-v1.5'; // CAMBIA ESTO cuando hagas actualizaciones
+
+// Archivos necesarios para que la app funcione offline (Requisito para instalar)
+const CACHE_URLS = [
+    './',
+    './index.html',
+    './manifest.json',
+    './img/logoAppHepa.png'
+];
 
 self.addEventListener('install', (e) => {
-    // Fuerza al SW a activarse inmediatamente tras instalarse
-    self.skipWaiting();
+    e.waitUntil(
+        caches.open(APP_VERSION).then((cache) => {
+            return cache.addAll(CACHE_URLS);
+        })
+    );
+    self.skipWaiting(); // Fuerza al SW a activarse inmediatamente
 });
 
 self.addEventListener('activate', (e) => {
@@ -23,8 +35,23 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
     // Estrategia: Network First (Red primero, luego caché si falla)
-    // Esto asegura que siempre se busque la versión más nueva
     e.respondWith(
-        fetch(e.request).catch(() => caches.match(e.request))
+        fetch(e.request)
+            .then((response) => {
+                // Si la red responde bien, actualizamos la caché (opcional, pero recomendado)
+                // Solo cacheamos peticiones exitosas y que sean del mismo origen (tu dominio)
+                if (!response || response.status !== 200 || response.type !== 'basic') {
+                    return response;
+                }
+                const responseClone = response.clone();
+                caches.open(APP_VERSION).then((cache) => {
+                    cache.put(e.request, responseClone);
+                });
+                return response;
+            })
+            .catch(() => {
+                // Si falla la red, buscamos en caché
+                return caches.match(e.request);
+            })
     );
 });

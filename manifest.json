@@ -3,7 +3,7 @@
   "short_name": "HEPA App",
   "description": "Plataforma corporativa para la gestión de asistencia y control de personal.",
   "lang": "es-MX",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#f3f4f6",
@@ -15,13 +15,13 @@
       "src": "img/logoAppHepa.png", 
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
       "src": "img/logoAppHepa.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
