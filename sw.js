@@ -1,12 +1,12 @@
 // Service Worker con Control de Versiones
-const APP_VERSION = 'hepa-app-v1.6'; // CAMBIA ESTO cuando hagas actualizaciones
+const APP_VERSION = 'hepa-app-v1.8'; // Versión actualizada
 
 // Archivos necesarios para que la app funcione offline (Requisito para instalar)
 const CACHE_URLS = [
     './',
     './index.html',
     './manifest.json',
-    './img/logoAppHepa.png'
+    './img/logoAppHepa.png' // Usamos la imagen que sabemos que funciona en el HTML
 ];
 
 self.addEventListener('install', (e) => {
@@ -34,13 +34,15 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
+    // Solo interceptamos peticiones GET (evitamos errores con Firebase/Firestore)
+    if (e.request.method !== 'GET') return;
+
     // Estrategia: Network First (Red primero, luego caché si falla)
     e.respondWith(
         fetch(e.request)
             .then((response) => {
-                // Si la red responde bien, actualizamos la caché (opcional, pero recomendado)
-                // Solo cacheamos peticiones exitosas y que sean del mismo origen (tu dominio)
-                if (!response || response.status !== 200 || response.type !== 'basic') {
+                // Validamos la respuesta. ACEPTAMOS 'cors' para guardar Tailwind/FontAwesome/Firebase
+                if (!response || response.status !== 200 || (response.type !== 'basic' && response.type !== 'cors')) {
                     return response;
                 }
                 const responseClone = response.clone();
@@ -50,7 +52,11 @@ self.addEventListener('fetch', (e) => {
                 return response;
             })
             .catch(() => {
-                // Si falla la red, buscamos en caché
+                // Si falla la red, buscamos en caché.
+                // Si es una navegación (abrir la app), devolvemos index.html siempre
+                if (e.request.mode === 'navigate') {
+                    return caches.match('./index.html').then((resp) => resp || caches.match('./'));
+                }
                 return caches.match(e.request);
             })
     );
