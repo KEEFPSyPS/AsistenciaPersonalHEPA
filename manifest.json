@@ -12,13 +12,13 @@
   "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
-      "src": "img/Logo_HEPA.png",
+      "src": "img/logoAppHepa.png", 
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "img/Logo_HEPA.png",
+      "src": "img/logoAppHepa.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
