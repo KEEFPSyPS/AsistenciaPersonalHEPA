@@ -1,22 +1,27 @@
 {
-  "name": "Refaccionarias HEPA",
-  "short_name": "ASISTENCIA HEPA",
+  "name": "Refaccionarias HEPA: Control de Asistencia",
+  "short_name": "HEPA App",
+  "description": "Plataforma corporativa para la gestión de asistencia y control de personal.",
+  "lang": "es-MX",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#f3f4f6",
   "theme_color": "#0000ff",
   "orientation": "portrait",
+  "categories": ["business", "productivity", "utilities"],
   "icons": [
     {
-      "src": "img/Logo_HEPA.png",
+      "src": "logoAppHepa.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "img/Logo_HEPA.png",
+      "src": "logoAppHepa.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-
   ]
 }

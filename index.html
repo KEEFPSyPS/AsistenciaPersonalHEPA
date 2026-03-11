@@ -9,7 +9,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="img/Logo_HEPA.jpg">
+    <link rel="apple-touch-icon" href="logoAppHepa.png">
     
     <!-- Tailwind CSS para el diseño -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -911,10 +911,31 @@ const appId = firebaseConfig.appId;
         // Iniciar App
         initAuth();
 
-        // Registrar Service Worker para permitir instalación
+        // Registrar Service Worker con Auto-Update
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
-                .then(() => console.log("Service Worker Registrado"));
+                .then((registration) => {
+                    console.log("Service Worker Registrado");
+
+                    // Detectar si hay una actualización esperando
+                    registration.onupdatefound = () => {
+                        const newWorker = registration.installing;
+                        newWorker.onstatechange = () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // Nueva versión detectada, recargamos la página para aplicarla
+                                window.location.reload();
+                            }
+                        };
+                    };
+                });
+
+            // Recargar si el controller cambia (otra medida de seguridad para actualizaciones)
+            let refreshing;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (refreshing) return;
+                window.location.reload();
+                refreshing = true;
+            });
         }
 
     </script>
