@@ -1,5 +1,5 @@
 // Service Worker con Control de Versiones
-const APP_VERSION = 'hepa-app-v1.5'; // CAMBIA ESTO cuando hagas actualizaciones
+const APP_VERSION = 'hepa-app-v1.6'; // CAMBIA ESTO cuando hagas actualizaciones
 
 // Archivos necesarios para que la app funcione offline (Requisito para instalar)
 const CACHE_URLS = [
