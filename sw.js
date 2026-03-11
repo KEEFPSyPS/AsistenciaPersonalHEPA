@@ -1,5 +1,5 @@
 // Service Worker con Control de Versiones
-const APP_VERSION = 'hepa-app-v1.3'; // CAMBIA ESTO cuando hagas actualizaciones
+const APP_VERSION = 'hepa-app-v1.4'; // CAMBIA ESTO cuando hagas actualizaciones
 
 self.addEventListener('install', (e) => {
     // Fuerza al SW a activarse inmediatamente tras instalarse
