@@ -341,8 +341,9 @@
                         <i class="fa-solid fa-house text-lg"></i>
                     </button>
                     <div class="flex bg-white rounded-lg shadow-sm p-0.5">
-                        <button onclick="switchAdminTab('logs')" id="tab-logs" class="px-4 py-1.5 rounded-md text-sm font-bold hepa-blue text-white transition-all">Registros</button>
-                        <button onclick="switchAdminTab('employees')" id="tab-employees" class="px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">Empleados</button>
+                        <button onclick="switchAdminTab('logs')" id="tab-logs" class="px-3 py-1.5 rounded-md text-xs font-bold hepa-blue text-white transition-all">Asistencia</button>
+                        <button onclick="switchAdminTab('employees')" id="tab-employees" class="px-3 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:text-gray-700 transition-all">Empleados</button>
+                        <button onclick="switchAdminTab('records')" id="tab-records" class="px-3 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:text-gray-700 transition-all">Registros</button>
                     </div>
                     <button onclick="logoutAdmin()" class="text-red-500 hover:text-red-700 p-2 transition-colors" aria-label="Cerrar sesión">
                         <i class="fa-solid fa-power-off text-lg"></i>
@@ -441,14 +442,75 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Tab Registros (Permisos e Incapacidades) -->
+                <div id="admin-records" class="flex-1 overflow-y-auto bg-gray-50 hidden">
+                    <div class="p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg text-gray-800">Registros de Personal</h3>
+                            <div class="flex gap-2">
+                                <button onclick="exportRecordsToExcel()" class="bg-emerald-600 text-white p-2.5 rounded-lg shadow-sm hover:bg-emerald-700 transition-all active:scale-95" title="Exportar Excel" aria-label="Exportar a Excel">
+                                    <i class="fa-solid fa-file-excel"></i>
+                                </button>
+                                <button onclick="exportRecordsToPDF()" class="bg-red-600 text-white p-2.5 rounded-lg shadow-sm hover:bg-red-700 transition-all active:scale-95" title="Exportar PDF" aria-label="Exportar a PDF">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Selector de tipo de registro -->
+                        <div class="flex gap-2 mb-4">
+                            <button onclick="switchRecordType('permisos')" id="rec-tab-permisos" class="flex-1 bg-white border-2 border-blue-200 text-blue-700 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-blue-50 transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-file-pen"></i> Permisos
+                            </button>
+                            <button onclick="switchRecordType('incapacidades')" id="rec-tab-incapacidades" class="flex-1 bg-white border-2 border-red-200 text-red-700 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-red-50 transition-all flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-notes-medical"></i> Incapacidades
+                            </button>
+                        </div>
+
+                        <!-- Panel de Permisos -->
+                        <div id="records-permisos" class="space-y-3">
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div class="p-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 flex justify-between items-center">
+                                    <h4 class="font-bold text-sm text-blue-800 flex items-center gap-2">
+                                        <i class="fa-solid fa-file-pen"></i> Permisos / Motivos de Inasistencia
+                                    </h4>
+                                    <button onclick="showAddRecordModal('permiso')" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 transition-all active:scale-95 flex items-center gap-1">
+                                        <i class="fa-solid fa-plus"></i> Nuevo
+                                    </button>
+                                </div>
+                                <div id="permisos-records-list" class="divide-y divide-gray-100 max-h-[50vh] overflow-y-auto">
+                                    <div class="p-6 text-center text-gray-400 text-sm">Cargando permisos...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel de Incapacidades -->
+                        <div id="records-incapacidades" class="space-y-3 hidden">
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                <div class="p-3 bg-gradient-to-r from-red-50 to-red-100 border-b border-red-200 flex justify-between items-center">
+                                    <h4 class="font-bold text-sm text-red-800 flex items-center gap-2">
+                                        <i class="fa-solid fa-notes-medical"></i> Incapacidades
+                                    </h4>
+                                    <button onclick="showAddRecordModal('incapacidad')" class="bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-700 transition-all active:scale-95 flex items-center gap-1">
+                                        <i class="fa-solid fa-plus"></i> Nueva
+                                    </button>
+                                </div>
+                                <div id="incapacidades-records-list" class="divide-y divide-gray-100 max-h-[50vh] overflow-y-auto">
+                                    <div class="p-6 text-center text-gray-400 text-sm">Cargando incapacidades...</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
     </main>
 
-    <!-- MODAL: AGREGAR EMPLEADO -->
+    <!-- MODAL: AGREGAR/EDITAR EMPLEADO -->
     <div id="modal-add-employee" class="modal-overlay">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-[fadeIn_0.2s_ease-out]">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-[fadeIn_0.2s_ease-out] max-h-[90vh] overflow-y-auto">
             <button onclick="closeModal('modal-add-employee')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors p-1" aria-label="Cerrar">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
@@ -466,9 +528,49 @@
                     <label class="text-xs text-gray-500 font-bold block mb-1">Cargo</label>
                     <input type="text" id="new-emp-role" placeholder="Mecánico, Ventas, etc." class="w-full border-2 border-gray-200 p-2.5 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition text-sm">
                 </div>
+
+                <!-- PERMISOS / MOTIVOS DE INASISTENCIA -->
+                <div class="border-t border-gray-100 pt-4 mt-2">
+                    <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-file-pen text-blue-500"></i> Permisos / Motivos de Inasistencia
+                    </h4>
+                    <div id="permisos-container" class="space-y-2">
+                        <!-- Los permisos se agregan dinámicamente aquí -->
+                    </div>
+                    <button onclick="addPermisoField()" type="button" class="text-sm text-blue-600 font-semibold hover:text-blue-800 transition-colors mt-2 flex items-center gap-1">
+                        <i class="fa-solid fa-plus-circle"></i> Agregar Permiso
+                    </button>
+                </div>
+
+                <!-- INCAPACIDADES -->
+                <div class="border-t border-gray-100 pt-4 mt-2">
+                    <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-notes-medical text-red-500"></i> Incapacidades
+                    </h4>
+                    <div id="incapacidades-container" class="space-y-2">
+                        <!-- Las incapacidades se agregan dinámicamente aquí -->
+                    </div>
+                    <button onclick="addIncapacidadField()" type="button" class="text-sm text-red-600 font-semibold hover:text-red-800 transition-colors mt-2 flex items-center gap-1">
+                        <i class="fa-solid fa-plus-circle"></i> Agregar Incapacidad
+                    </button>
+                </div>
+
                 <button id="btn-save-employee" onclick="saveEmployee()" class="w-full hepa-blue text-white font-bold py-3 rounded-lg shadow-md mt-2 hover:shadow-lg transition-all active:scale-[0.98]">
                     Guardar y Generar QR
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: AGREGAR/EDITAR PERMISO O INCAPACIDAD -->
+    <div id="modal-add-record" class="modal-overlay">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-[fadeIn_0.2s_ease-out]">
+            <button onclick="closeModal('modal-add-record')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors p-1" aria-label="Cerrar">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 id="modal-record-title" class="text-xl font-bold mb-5 text-gray-800">Nuevo Registro</h3>
+            <div id="modal-record-body" class="space-y-4">
+                <!-- Se rellena dinámicamente -->
             </div>
         </div>
     </div>
@@ -806,12 +908,19 @@
         window.switchAdminTab = (tab) => {
             document.getElementById('admin-logs').classList.add('hidden');
             document.getElementById('admin-employees').classList.add('hidden');
+            document.getElementById('admin-records').classList.add('hidden');
             document.getElementById(`admin-${tab}`).classList.remove('hidden');
 
-            document.getElementById('tab-logs').className = "px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-700 transition-all";
-            document.getElementById('tab-employees').className = "px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-700 transition-all";
+            document.getElementById('tab-logs').className = "px-3 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:text-gray-700 transition-all";
+            document.getElementById('tab-employees').className = "px-3 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:text-gray-700 transition-all";
+            document.getElementById('tab-records').className = "px-3 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:text-gray-700 transition-all";
             
-            document.getElementById(`tab-${tab}`).className = "px-4 py-1.5 rounded-md text-sm font-bold hepa-blue text-white transition-all";
+            document.getElementById(`tab-${tab}`).className = "px-3 py-1.5 rounded-md text-xs font-bold hepa-blue text-white transition-all";
+
+            // Renderizar registros al cambiar a la pestaña
+            if (tab === 'records') {
+                renderRecordsList();
+            }
         };
 
         // --- LÓGICA DE FILTROS ---
@@ -857,6 +966,23 @@
         };
 
         // --- RENDERIZADO ---
+        function getEmployeePermisosInfo(empId) {
+            const emp = employeesData.find(e => e.id === empId);
+            if (!emp) return '';
+            let info = [];
+            if (emp.permisos && emp.permisos.length > 0) {
+                emp.permisos.forEach(p => {
+                    if (p.motivo) info.push(`Permiso: ${p.motivo}${p.fecha ? ' (' + formatDateShort(p.fecha) + ')' : ''}`);
+                });
+            }
+            if (emp.incapacidades && emp.incapacidades.length > 0) {
+                emp.incapacidades.forEach(inc => {
+                    if (inc.inicio && inc.fin) info.push(`Incapacidad: ${inc.tipo || 'N/A'} ${formatDateShort(inc.inicio)}-${formatDateShort(inc.fin)}`);
+                });
+            }
+            return info.join(' | ');
+        }
+
         window.renderLogs = (data = logsData) => {
             const container = document.getElementById('logs-container');
             if (!data || data.length === 0) {
@@ -873,26 +999,31 @@
                 if(log.action === 'COMIDA_REGRESO') { iconStr = '<i class="fa-solid fa-rotate-left text-green-500"></i>'; colorClass = 'text-green-700'; }
                 if(log.action === 'SALIDA') { iconStr = '<i class="fa-solid fa-right-from-bracket text-red-500"></i>'; colorClass = 'text-red-700'; }
 
+                const permisosInfo = getEmployeePermisosInfo(log.employeeId);
+
                 return `
-                <div class="p-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
-                    <div class="flex items-center gap-3 min-w-0">
-                        <div class="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
-                            ${iconStr}
+                <div class="p-3 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
+                                ${iconStr}
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-gray-800 truncate">${escapeHtml(log.employeeName)}</p>
+                                <p class="text-xs text-gray-500 font-mono truncate">${escapeHtml(log.employeeId)} - ${log.action}</p>
+                            </div>
                         </div>
-                        <div class="min-w-0">
-                            <p class="text-sm font-bold text-gray-800 truncate">${escapeHtml(log.employeeName)}</p>
-                            <p class="text-xs text-gray-500 font-mono truncate">${escapeHtml(log.employeeId)} - ${log.action}</p>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <div class="text-right">
+                                <p class="text-sm font-bold ${colorClass}">${log.timeString}</p>
+                                <p class="text-xs text-gray-400">${log.dateString}</p>
+                            </div>
+                            <button onclick="deleteLog('${log.firebaseId}')" class="text-gray-300 hover:text-red-500 p-2 transition-colors" title="Eliminar registro" aria-label="Eliminar registro">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 flex-shrink-0">
-                        <div class="text-right">
-                            <p class="text-sm font-bold ${colorClass}">${log.timeString}</p>
-                            <p class="text-xs text-gray-400">${log.dateString}</p>
-                        </div>
-                        <button onclick="deleteLog('${log.firebaseId}')" class="text-gray-300 hover:text-red-500 p-2 transition-colors" title="Eliminar registro" aria-label="Eliminar registro">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </div>
+                    ${permisosInfo ? `<div class="mt-1.5 text-xs text-gray-400 truncate pl-11">${escapeHtml(permisosInfo)}</div>` : ''}
                 </div>`;
             }).join('');
         };
@@ -904,26 +1035,59 @@
                 return;
             }
 
-            container.innerHTML = employeesData.map(emp => `
-                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between">
-                    <div class="min-w-0">
-                        <p class="font-bold text-gray-800 truncate">${escapeHtml(emp.name)}</p>
-                        <p class="text-xs text-gray-500 truncate">ID: ${escapeHtml(emp.id)} | ${escapeHtml(emp.role)}</p>
+            container.innerHTML = employeesData.map(emp => {
+                // Mostrar badges de permisos activos
+                let badgesHtml = '';
+                if (emp.permisos && emp.permisos.length > 0) {
+                    const permisosActivos = emp.permisos.filter(p => p.motivo && p.fecha);
+                    if (permisosActivos.length > 0) {
+                        badgesHtml += permisosActivos.map(p => 
+                            `<span class="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+                                <i class="fa-solid fa-file-pen text-[10px]"></i> ${escapeHtml(p.motivo)} ${p.fecha ? formatDateShort(p.fecha) : ''}
+                            </span>`
+                        ).join(' ');
+                    }
+                }
+                if (emp.incapacidades && emp.incapacidades.length > 0) {
+                    const incapActivas = emp.incapacidades.filter(inc => inc.inicio && inc.fin);
+                    if (incapActivas.length > 0) {
+                        badgesHtml += incapActivas.map(inc => 
+                            `<span class="inline-flex items-center gap-1 text-xs bg-red-50 text-red-700 px-2 py-0.5 rounded-full border border-red-200">
+                                <i class="fa-solid fa-notes-medical text-[10px]"></i> ${escapeHtml(inc.tipo || 'Incapacidad')} ${formatDateShort(inc.inicio)}-${formatDateShort(inc.fin)}
+                            </span>`
+                        ).join(' ');
+                    }
+                }
+
+                return `
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
+                    <div class="flex items-center justify-between">
+                        <div class="min-w-0 flex-1">
+                            <p class="font-bold text-gray-800 truncate">${escapeHtml(emp.name)}</p>
+                            <p class="text-xs text-gray-500 truncate">ID: ${escapeHtml(emp.id)} | ${escapeHtml(emp.role)}</p>
+                        </div>
+                        <div class="flex gap-2 flex-shrink-0 ml-2">
+                            <button onclick="viewEmployeeQR('${emp.id}', '${emp.name}')" class="bg-gray-100 text-hepa-blue p-2 rounded-lg hover:bg-gray-200 transition-colors" title="Ver QR" aria-label="Ver QR">
+                                <i class="fa-solid fa-qrcode"></i>
+                            </button>
+                            <button onclick="editEmployee('${emp.firebaseId}')" class="bg-blue-50 text-blue-500 p-2 rounded-lg hover:bg-blue-100 transition-colors" title="Editar" aria-label="Editar empleado">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button onclick="deleteEmployee('${emp.firebaseId}')" class="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition-colors" title="Eliminar" aria-label="Eliminar empleado">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="flex gap-2 flex-shrink-0">
-                        <button onclick="viewEmployeeQR('${emp.id}', '${emp.name}')" class="bg-gray-100 text-hepa-blue p-2 rounded-lg hover:bg-gray-200 transition-colors" title="Ver QR" aria-label="Ver QR">
-                            <i class="fa-solid fa-qrcode"></i>
-                        </button>
-                        <button onclick="editEmployee('${emp.firebaseId}')" class="bg-blue-50 text-blue-500 p-2 rounded-lg hover:bg-blue-100 transition-colors" title="Editar" aria-label="Editar empleado">
-                            <i class="fa-solid fa-pen"></i>
-                        </button>
-                        <button onclick="deleteEmployee('${emp.firebaseId}')" class="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition-colors" title="Eliminar" aria-label="Eliminar empleado">
-                            <i class="fa-solid fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                    ${badgesHtml ? `<div class="flex flex-wrap gap-1.5 mt-2">${badgesHtml}</div>` : ''}
+                </div>`;
+            }).join('');
         };
+
+        function formatDateShort(dateStr) {
+            if (!dateStr) return '';
+            const [y, m, d] = dateStr.split('-');
+            return `${d}/${m}`;
+        }
 
         // --- GESTIÓN DE EMPLEADOS ---
         window.openModal = (id) => { 
@@ -933,11 +1097,96 @@
             document.getElementById(id).classList.remove('open'); 
         };
 
+        // --- PERMISOS E INCAPACIDADES ---
+        let permisosCount = 0;
+        let incapacidadesCount = 0;
+
+        window.addPermisoField = (motivo = '', fecha = '') => {
+            permisosCount++;
+            const container = document.getElementById('permisos-container');
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-start';
+            div.id = `permiso-${permisosCount}`;
+            div.innerHTML = `
+                <div class="flex-1">
+                    <input type="text" class="permiso-motivo w-full border-2 border-gray-200 p-2 rounded-lg text-xs focus:outline-none focus:border-blue-500 transition" placeholder="Motivo del permiso" value="${escapeHtml(motivo)}">
+                </div>
+                <div class="w-36">
+                    <input type="date" class="permiso-fecha w-full border-2 border-gray-200 p-2 rounded-lg text-xs focus:outline-none focus:border-blue-500 transition" value="${fecha}">
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 p-2 flex-shrink-0" type="button" aria-label="Eliminar permiso">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        };
+
+        window.addIncapacidadField = (fechaInicio = '', fechaFin = '', tipo = '') => {
+            incapacidadesCount++;
+            const container = document.getElementById('incapacidades-container');
+            const div = document.createElement('div');
+            div.className = 'flex gap-2 items-start';
+            div.id = `incapacidad-${incapacidadesCount}`;
+            div.innerHTML = `
+                <div class="w-32">
+                    <input type="date" class="incap-inicio w-full border-2 border-gray-200 p-2 rounded-lg text-xs focus:outline-none focus:border-red-400 transition" value="${fechaInicio}" placeholder="Inicio">
+                </div>
+                <div class="w-32">
+                    <input type="date" class="incap-fin w-full border-2 border-gray-200 p-2 rounded-lg text-xs focus:outline-none focus:border-red-400 transition" value="${fechaFin}" placeholder="Fin">
+                </div>
+                <div class="flex-1">
+                    <input type="text" class="incap-tipo w-full border-2 border-gray-200 p-2 rounded-lg text-xs focus:outline-none focus:border-red-400 transition" placeholder="Tipo (Ej. Enfermedad, Accidente)" value="${escapeHtml(tipo)}">
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-red-400 hover:text-red-600 p-2 flex-shrink-0" type="button" aria-label="Eliminar incapacidad">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        };
+
+        function collectPermisos() {
+            const items = document.querySelectorAll('#permisos-container > div');
+            return Array.from(items).map(div => ({
+                motivo: div.querySelector('.permiso-motivo')?.value || '',
+                fecha: div.querySelector('.permiso-fecha')?.value || ''
+            })).filter(p => p.motivo || p.fecha);
+        }
+
+        function collectIncapacidades() {
+            const items = document.querySelectorAll('#incapacidades-container > div');
+            return Array.from(items).map(div => ({
+                inicio: div.querySelector('.incap-inicio')?.value || '',
+                fin: div.querySelector('.incap-fin')?.value || '',
+                tipo: div.querySelector('.incap-tipo')?.value || ''
+            })).filter(inc => inc.inicio || inc.fin || inc.tipo);
+        }
+
+        function renderPermisosIncapacidades(emp) {
+            // Limpiar contenedores
+            document.getElementById('permisos-container').innerHTML = '';
+            document.getElementById('incapacidades-container').innerHTML = '';
+            permisosCount = 0;
+            incapacidadesCount = 0;
+
+            // Renderizar permisos existentes
+            if (emp.permisos && Array.isArray(emp.permisos)) {
+                emp.permisos.forEach(p => window.addPermisoField(p.motivo, p.fecha));
+            }
+            // Renderizar incapacidades existentes
+            if (emp.incapacidades && Array.isArray(emp.incapacidades)) {
+                emp.incapacidades.forEach(inc => window.addIncapacidadField(inc.inicio, inc.fin, inc.tipo));
+            }
+        }
+
         window.prepareAddEmployee = () => {
             editingEmployeeId = null;
             document.getElementById('new-emp-id').value = '';
             document.getElementById('new-emp-name').value = '';
             document.getElementById('new-emp-role').value = '';
+            document.getElementById('permisos-container').innerHTML = '';
+            document.getElementById('incapacidades-container').innerHTML = '';
+            permisosCount = 0;
+            incapacidadesCount = 0;
             
             document.getElementById('modal-title').innerText = "Nuevo Empleado";
             document.getElementById('btn-save-employee').innerText = "Guardar y Generar QR";
@@ -952,6 +1201,9 @@
             document.getElementById('new-emp-id').value = emp.id;
             document.getElementById('new-emp-name').value = emp.name;
             document.getElementById('new-emp-role').value = emp.role;
+            
+            // Cargar permisos e incapacidades existentes
+            renderPermisosIncapacidades(emp);
             
             document.getElementById('modal-title').innerText = "Editar Empleado";
             document.getElementById('btn-save-employee').innerText = "Actualizar Datos";
@@ -969,12 +1221,19 @@
             const isDuplicate = employeesData.some(e => e.id === id && e.firebaseId !== editingEmployeeId);
             if (isDuplicate) { window.showToast("Ese ID ya existe", "error"); return; }
 
+            // Recolectar permisos e incapacidades
+            const permisos = collectPermisos();
+            const incapacidades = collectIncapacidades();
+
             try {
+                const dataToSave = { id, name, role, permisos, incapacidades };
+                
                 if (editingEmployeeId) {
-                    await updateDoc(doc(db, employeesPath, editingEmployeeId), { id, name, role });
+                    await updateDoc(doc(db, employeesPath, editingEmployeeId), dataToSave);
                     window.showToast("Empleado actualizado");
                 } else {
-                    await addDoc(collection(db, employeesPath), { id, name, role, createdAt: Date.now() });
+                    dataToSave.createdAt = Date.now();
+                    await addDoc(collection(db, employeesPath), dataToSave);
                     window.showToast("Empleado guardado");
                     window.viewEmployeeQR(id, name);
                 }
@@ -1020,14 +1279,33 @@
         };
 
         // --- EXPORTACIÓN ---
+        function getEmployeePermisosExport(empId) {
+            const emp = employeesData.find(e => e.id === empId);
+            if (!emp) return { permisos: '', incapacidades: '' };
+            let permisosStr = '';
+            let incapacidadesStr = '';
+            if (emp.permisos && emp.permisos.length > 0) {
+                permisosStr = emp.permisos.filter(p => p.motivo).map(p => `${p.motivo}${p.fecha ? ' (' + p.fecha + ')' : ''}`).join('; ');
+            }
+            if (emp.incapacidades && emp.incapacidades.length > 0) {
+                incapacidadesStr = emp.incapacidades.filter(inc => inc.inicio && inc.fin).map(inc => `${inc.tipo || 'Incapacidad'} ${inc.inicio} a ${inc.fin}`).join('; ');
+            }
+            return { permisos: permisosStr, incapacidades: incapacidadesStr };
+        }
+
         function prepareDataForExport() {
-            return (currentFilteredLogs !== null ? currentFilteredLogs : logsData).map(log => [
-                log.dateString,
-                log.timeString,
-                log.employeeId,
-                log.employeeName,
-                log.action
-            ]);
+            return (currentFilteredLogs !== null ? currentFilteredLogs : logsData).map(log => {
+                const empInfo = getEmployeePermisosExport(log.employeeId);
+                return [
+                    log.dateString,
+                    log.timeString,
+                    log.employeeId,
+                    log.employeeName,
+                    log.action,
+                    empInfo.permisos,
+                    empInfo.incapacidades
+                ];
+            });
         }
 
         window.exportToPDF = () => {
@@ -1041,9 +1319,13 @@
 
             doc.autoTable({
                 startY: 35,
-                head: [['Fecha', 'Hora', 'ID', 'Empleado', 'Acción']],
+                head: [['Fecha', 'Hora', 'ID', 'Empleado', 'Acción', 'Permisos', 'Incapacidades']],
                 body: prepareDataForExport(),
-                headStyles: { fillColor: [10, 22, 40] }
+                headStyles: { fillColor: [10, 22, 40] },
+                columnStyles: {
+                    5: { cellWidth: 40 },
+                    6: { cellWidth: 40 }
+                }
             });
 
             doc.save("HEPA_Asistencia.pdf");
@@ -1051,7 +1333,7 @@
         };
 
         window.exportToExcel = () => {
-            const data = [['Fecha', 'Hora', 'ID', 'Empleado', 'Acción'], ...prepareDataForExport()];
+            const data = [['Fecha', 'Hora', 'ID', 'Empleado', 'Acción', 'Permisos', 'Incapacidades'], ...prepareDataForExport()];
             const ws = XLSX.utils.aoa_to_sheet(data);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Asistencias");
@@ -1074,6 +1356,349 @@
             } else {
                 window.showToast("Tu navegador no soporta compartir directamente", "error");
             }
+        };
+
+        // --- GESTIÓN DE REGISTROS (PERMISOS E INCAPACIDADES) ---
+        let currentRecordType = 'permisos';
+        let editingRecordEmpId = null;
+        let editingRecordIndex = null;
+
+        window.switchRecordType = (type) => {
+            currentRecordType = type;
+            document.getElementById('records-permisos').classList.toggle('hidden', type !== 'permisos');
+            document.getElementById('records-incapacidades').classList.toggle('hidden', type !== 'incapacidades');
+            
+            document.getElementById('rec-tab-permisos').className = type === 'permisos' 
+                ? 'flex-1 bg-blue-600 text-white py-2.5 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center gap-2'
+                : 'flex-1 bg-white border-2 border-blue-200 text-blue-700 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-blue-50 transition-all flex items-center justify-center gap-2';
+            
+            document.getElementById('rec-tab-incapacidades').className = type === 'incapacidades'
+                ? 'flex-1 bg-red-600 text-white py-2.5 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center gap-2'
+                : 'flex-1 bg-white border-2 border-red-200 text-red-700 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-red-50 transition-all flex items-center justify-center gap-2';
+        };
+
+        function renderRecordsList() {
+            renderPermisosList();
+            renderIncapacidadesList();
+        }
+
+        function renderPermisosList() {
+            const container = document.getElementById('permisos-records-list');
+            const allPermisos = [];
+            
+            employeesData.forEach(emp => {
+                if (emp.permisos && Array.isArray(emp.permisos)) {
+                    emp.permisos.forEach((p, idx) => {
+                        if (p.motivo) {
+                            allPermisos.push({ ...p, employeeId: emp.id, employeeName: emp.name, firebaseId: emp.firebaseId, index: idx });
+                        }
+                    });
+                }
+            });
+
+            if (allPermisos.length === 0) {
+                container.innerHTML = '<div class="p-6 text-center text-gray-400 text-sm flex flex-col items-center"><i class="fa-solid fa-file-pen text-3xl mb-2 opacity-40"></i>No hay permisos registrados.</div>';
+                return;
+            }
+
+            container.innerHTML = allPermisos.map(p => `
+                <div class="p-3 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <div class="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-file-pen text-blue-600 text-sm"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-gray-800 truncate">${escapeHtml(p.motivo)}</p>
+                                <p class="text-xs text-gray-500 truncate">${escapeHtml(p.employeeName)} (${escapeHtml(p.employeeId)})${p.fecha ? ' · ' + formatDateShort(p.fecha) : ''}</p>
+                            </div>
+                        </div>
+                        <button onclick="deleteRecord('${p.firebaseId}', ${p.index}, 'permiso')" class="text-gray-300 hover:text-red-500 p-2 transition-colors flex-shrink-0" title="Eliminar permiso" aria-label="Eliminar permiso">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderIncapacidadesList() {
+            const container = document.getElementById('incapacidades-records-list');
+            const allIncapacidades = [];
+            
+            employeesData.forEach(emp => {
+                if (emp.incapacidades && Array.isArray(emp.incapacidades)) {
+                    emp.incapacidades.forEach((inc, idx) => {
+                        if (inc.inicio && inc.fin) {
+                            allIncapacidades.push({ ...inc, employeeId: emp.id, employeeName: emp.name, firebaseId: emp.firebaseId, index: idx });
+                        }
+                    });
+                }
+            });
+
+            if (allIncapacidades.length === 0) {
+                container.innerHTML = '<div class="p-6 text-center text-gray-400 text-sm flex flex-col items-center"><i class="fa-solid fa-notes-medical text-3xl mb-2 opacity-40"></i>No hay incapacidades registradas.</div>';
+                return;
+            }
+
+            container.innerHTML = allIncapacidades.map(inc => `
+                <div class="p-3 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3 min-w-0 flex-1">
+                            <div class="bg-red-100 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
+                                <i class="fa-solid fa-notes-medical text-red-600 text-sm"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-sm font-bold text-gray-800 truncate">${escapeHtml(inc.tipo || 'Incapacidad')}</p>
+                                <p class="text-xs text-gray-500 truncate">${escapeHtml(inc.employeeName)} (${escapeHtml(inc.employeeId)}) · ${formatDateShort(inc.inicio)} - ${formatDateShort(inc.fin)}</p>
+                            </div>
+                        </div>
+                        <button onclick="deleteRecord('${inc.firebaseId}', ${inc.index}, 'incapacidad')" class="text-gray-300 hover:text-red-500 p-2 transition-colors flex-shrink-0" title="Eliminar incapacidad" aria-label="Eliminar incapacidad">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.showAddRecordModal = (type) => {
+            editingRecordEmpId = null;
+            editingRecordIndex = null;
+            
+            const isPermiso = type === 'permiso';
+            const title = isPermiso ? 'Nuevo Permiso' : 'Nueva Incapacidad';
+            const color = isPermiso ? 'blue' : 'red';
+            const icon = isPermiso ? 'fa-file-pen' : 'fa-notes-medical';
+            
+            // Crear selector de empleados
+            const empOptions = employeesData.map(e => 
+                `<option value="${escapeHtml(e.firebaseId)}">${escapeHtml(e.name)} (${escapeHtml(e.id)})</option>`
+            ).join('');
+
+            let bodyHtml = '';
+            if (isPermiso) {
+                bodyHtml = `
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold block mb-1">Empleado</label>
+                        <select id="record-emp-select" class="w-full border-2 border-gray-200 p-2.5 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                            <option value="">Seleccionar empleado...</option>
+                            ${empOptions}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold block mb-1">Motivo del Permiso</label>
+                        <input type="text" id="record-motivo" placeholder="Ej. Cita médica, Asunto personal..." class="w-full border-2 border-gray-200 p-2.5 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold block mb-1">Fecha del Permiso</label>
+                        <input type="date" id="record-fecha" class="w-full border-2 border-gray-200 p-2.5 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                    </div>
+                    <button onclick="saveRecord('permiso')" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-blue-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Permiso
+                    </button>
+                `;
+            } else {
+                bodyHtml = `
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold block mb-1">Empleado</label>
+                        <select id="record-emp-select" class="w-full border-2 border-gray-200 p-2.5 rounded-lg text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition">
+                            <option value="">Seleccionar empleado...</option>
+                            ${empOptions}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 font-bold block mb-1">Tipo de Incapacidad</label>
+                        <input type="text" id="record-tipo" placeholder="Ej. Enfermedad, Accidente, Cirugía..." class="w-full border-2 border-gray-200 p-2.5 rounded-lg text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-gray-500 font-bold block mb-1">Fecha Inicio</label>
+                            <input type="date" id="record-inicio" class="w-full border-2 border-gray-200 p-2.5 rounded-lg text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 font-bold block mb-1">Fecha Fin</label>
+                            <input type="date" id="record-fin" class="w-full border-2 border-gray-200 p-2.5 rounded-lg text-sm focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition">
+                        </div>
+                    </div>
+                    <button onclick="saveRecord('incapacidad')" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg shadow-md hover:bg-red-700 transition-all active:scale-[0.98] flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar Incapacidad
+                    </button>
+                `;
+            }
+
+            document.getElementById('modal-record-title').innerHTML = `<i class="fa-solid ${icon} text-${color}-500 mr-2"></i>${title}`;
+            document.getElementById('modal-record-body').innerHTML = bodyHtml;
+            window.openModal('modal-add-record');
+        };
+
+        window.saveRecord = async (type) => {
+            if (!currentUser) return;
+            
+            const empSelect = document.getElementById('record-emp-select');
+            const firebaseId = empSelect.value;
+            
+            if (!firebaseId) {
+                window.showToast("Selecciona un empleado", "error");
+                return;
+            }
+
+            const emp = employeesData.find(e => e.firebaseId === firebaseId);
+            if (!emp) return;
+
+            try {
+                const permisos = emp.permisos ? [...emp.permisos] : [];
+                const incapacidades = emp.incapacidades ? [...emp.incapacidades] : [];
+
+                if (type === 'permiso') {
+                    const motivo = document.getElementById('record-motivo').value.trim();
+                    const fecha = document.getElementById('record-fecha').value;
+                    if (!motivo) { window.showToast("Ingresa el motivo del permiso", "error"); return; }
+                    
+                    if (editingRecordIndex !== null && editingRecordEmpId === firebaseId) {
+                        permisos[editingRecordIndex] = { motivo, fecha };
+                    } else {
+                        permisos.push({ motivo, fecha });
+                    }
+                } else {
+                    const tipo = document.getElementById('record-tipo').value.trim();
+                    const inicio = document.getElementById('record-inicio').value;
+                    const fin = document.getElementById('record-fin').value;
+                    if (!inicio || !fin) { window.showToast("Ingresa las fechas de inicio y fin", "error"); return; }
+                    
+                    if (editingRecordIndex !== null && editingRecordEmpId === firebaseId) {
+                        incapacidades[editingRecordIndex] = { inicio, fin, tipo };
+                    } else {
+                        incapacidades.push({ inicio, fin, tipo });
+                    }
+                }
+
+                await updateDoc(doc(db, employeesPath, firebaseId), { permisos, incapacidades });
+                window.showToast(type === 'permiso' ? "Permiso guardado" : "Incapacidad guardada");
+                window.closeModal('modal-add-record');
+                renderRecordsList();
+            } catch(e) {
+                console.error(e);
+                window.showToast("Error al guardar", "error");
+            }
+        };
+
+        window.deleteRecord = async (firebaseId, index, type) => {
+            if (!confirm(`¿Eliminar este ${type === 'permiso' ? 'permiso' : 'incapacidad'}?`)) return;
+            
+            const emp = employeesData.find(e => e.firebaseId === firebaseId);
+            if (!emp) return;
+
+            try {
+                const permisos = emp.permisos ? [...emp.permisos] : [];
+                const incapacidades = emp.incapacidades ? [...emp.incapacidades] : [];
+
+                if (type === 'permiso') {
+                    permisos.splice(index, 1);
+                } else {
+                    incapacidades.splice(index, 1);
+                }
+
+                await updateDoc(doc(db, employeesPath, firebaseId), { permisos, incapacidades });
+                window.showToast(type === 'permiso' ? "Permiso eliminado" : "Incapacidad eliminada");
+                renderRecordsList();
+            } catch(e) {
+                console.error(e);
+                window.showToast("Error al eliminar", "error");
+            }
+        };
+
+        // --- EXPORTACIÓN DE REGISTROS (Permisos e Incapacidades) ---
+        function prepareRecordsDataForExport(type) {
+            const data = [];
+            employeesData.forEach(emp => {
+                if (type === 'permisos' && emp.permisos) {
+                    emp.permisos.forEach(p => {
+                        if (p.motivo) {
+                            data.push([emp.id, emp.name, emp.role, p.motivo, p.fecha || '']);
+                        }
+                    });
+                } else if (type === 'incapacidades' && emp.incapacidades) {
+                    emp.incapacidades.forEach(inc => {
+                        if (inc.inicio && inc.fin) {
+                            data.push([emp.id, emp.name, emp.role, inc.tipo || 'Incapacidad', inc.inicio, inc.fin]);
+                        }
+                    });
+                }
+            });
+            return data;
+        }
+
+        window.exportRecordsToExcel = () => {
+            const permisosData = prepareRecordsDataForExport('permisos');
+            const incapacidadesData = prepareRecordsDataForExport('incapacidades');
+            
+            const wb = XLSX.utils.book_new();
+            
+            if (permisosData.length > 0) {
+                const wsPermisos = XLSX.utils.aoa_to_sheet([['ID', 'Empleado', 'Cargo', 'Motivo', 'Fecha'], ...permisosData]);
+                XLSX.utils.book_append_sheet(wb, wsPermisos, "Permisos");
+            }
+            
+            if (incapacidadesData.length > 0) {
+                const wsIncap = XLSX.utils.aoa_to_sheet([['ID', 'Empleado', 'Cargo', 'Tipo', 'Inicio', 'Fin'], ...incapacidadesData]);
+                XLSX.utils.book_append_sheet(wb, wsIncap, "Incapacidades");
+            }
+            
+            if (wb.SheetNames.length === 0) {
+                window.showToast("No hay datos para exportar", "error");
+                return;
+            }
+            
+            XLSX.writeFile(wb, "HEPA_Registros_Personal.xlsx");
+            window.showToast("Excel Descargado");
+        };
+
+        window.exportRecordsToPDF = () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            doc.setFontSize(18);
+            doc.text("Refaccionarias HEPA - Registros de Personal", 14, 22);
+            doc.setFontSize(10);
+            doc.text(`Generado: ${new Date().toLocaleString('es-MX')}`, 14, 30);
+
+            const permisosData = prepareRecordsDataForExport('permisos');
+            const incapacidadesData = prepareRecordsDataForExport('incapacidades');
+
+            if (permisosData.length > 0) {
+                doc.setFontSize(14);
+                doc.text("Permisos / Motivos de Inasistencia", 14, 42);
+                doc.autoTable({
+                    startY: 48,
+                    head: [['ID', 'Empleado', 'Cargo', 'Motivo', 'Fecha']],
+                    body: permisosData,
+                    headStyles: { fillColor: [59, 130, 246] },
+                });
+            }
+
+            let finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 15 : 48;
+            
+            if (incapacidadesData.length > 0) {
+                if (finalY > 250) {
+                    doc.addPage();
+                    finalY = 20;
+                }
+                doc.setFontSize(14);
+                doc.text("Incapacidades", 14, finalY);
+                doc.autoTable({
+                    startY: finalY + 6,
+                    head: [['ID', 'Empleado', 'Cargo', 'Tipo', 'Inicio', 'Fin']],
+                    body: incapacidadesData,
+                    headStyles: { fillColor: [239, 68, 68] },
+                });
+            }
+
+            if (permisosData.length === 0 && incapacidadesData.length === 0) {
+                doc.setFontSize(12);
+                doc.text("No hay registros de personal disponibles.", 14, 42);
+            }
+
+            doc.save("HEPA_Registros_Personal.pdf");
+            window.showToast("PDF Descargado");
         };
 
         // Iniciar App
