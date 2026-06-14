@@ -1,13 +1,13 @@
 {
-  "name": "Asistencia",
-  "short_name": "ASISTENCIA",
-  "description": "Plataforma corporativa para la gestión de asistencia y control de personal.",
+  "name": "Refaccionarias HEPA - Control de Asistencia",
+  "short_name": "HEPA Asistencia",
+  "description": "Plataforma corporativa para la gestión de asistencia y control de personal de Refaccionarias HEPA.",
   "lang": "es-MX",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f3f4f6",
-  "theme_color": "#0000ff",
+  "background_color": "#f8fafc",
+  "theme_color": "#0a1628",
   "orientation": "portrait",
   "categories": ["business", "productivity", "utilities"],
   "icons": [
@@ -23,5 +23,7 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
 }

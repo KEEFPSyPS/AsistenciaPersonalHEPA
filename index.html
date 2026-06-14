@@ -11,242 +11,435 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="img/logoAppHepa.png">
     
-    <!-- Tailwind CSS para el diseño -->
+    <!-- TAILWIND CSS via CDN con configuración personalizada -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- FontAwesome para iconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Librería para leer códigos QR -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    
-    <!-- Librería para generar códigos QR (para el admin) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        hepa: {
+                            primary: '#0a1628',
+                            'primary-light': '#1a2a4a',
+                            'primary-mid': '#2a4a7a',
+                            accent: '#3b82f6',
+                            'accent-hover': '#2563eb',
+                            'accent-light': '#dbeafe',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 
-    <!-- Librerías para exportar a PDF y Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Preconnect a CDNs críticos para carga rápida -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://www.gstatic.com">
+
+    <!-- FontAwesome para iconos (carga asíncrona con fallback) -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+
+    <!-- Librerías (carga diferida con defer para no bloquear el render) -->
+    <script src="https://unpkg.com/html5-qrcode" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
 
     <style>
-        /* Estilos personalizados y animaciones */
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; }
-        .hepa-blue { background-color: #0000ff; }
-        .text-hepa-blue { color: #0000ff; }
-        
-        .view { display: none; animation: fadeIn 0.3s ease-in-out; }
-        .view.active { display: block; }
-        
+        /* ============================================================
+           SISTEMA DE DISEÑO INSTITUCIONAL HEPA
+           ============================================================ */
+        :root {
+            --hepa-primary: #0a1628;
+            --hepa-primary-light: #1a2a4a;
+            --hepa-primary-mid: #2a4a7a;
+            --hepa-accent: #3b82f6;
+            --hepa-accent-hover: #2563eb;
+            --hepa-accent-light: #dbeafe;
+            --color-entrada: #3b82f6;
+            --color-entrada-bg: #eff6ff;
+            --color-comida-salida: #f59e0b;
+            --color-comida-salida-bg: #fffbeb;
+            --color-comida-regreso: #10b981;
+            --color-comida-regreso-bg: #ecfdf5;
+            --color-salida: #ef4444;
+            --color-salida-bg: #fef2f2;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-tertiary: #94a3b8;
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.04);
+            --font-sans: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            --font-mono: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --radius-full: 9999px;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+            --duration-fast: 150ms;
+            --duration-normal: 250ms;
+            --duration-slow: 350ms;
+            --header-height: 64px;
+            --max-content-width: 480px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { text-size-adjust: 100%; -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; height: 100%; }
+        body {
+            font-family: var(--font-sans);
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header con altura fija */
+        .app-header {
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        /* Main content - ocupa el resto del espacio */
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            background: #ffffff;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+        }
+
+        .hepa-blue { background: linear-gradient(135deg, var(--hepa-primary) 0%, var(--hepa-primary-light) 100%); }
+        .text-hepa-blue { color: var(--hepa-accent); }
+
+        /* Sistema de vistas */
+        .view { 
+            display: none; 
+            height: 100%; 
+            contain: layout style; 
+        }
+        .view.active { 
+            display: flex; 
+            flex-direction: column; 
+            animation: fadeIn var(--duration-slow) var(--ease-out-expo) forwards; 
+        }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Estilos para el lector QR */
-        #qr-reader { width: 100%; border-radius: 0.5rem; overflow: hidden; border: none !important; }
+        /* Escáner QR */
+        #qr-reader { width: 100%; border-radius: var(--radius-md); overflow: hidden; border: none !important; background: var(--bg-tertiary); }
         #qr-reader img { display: none; }
-        #qr-reader__scan_region { background: white; }
-        #qr-reader__dashboard { padding: 10px !important; background: #f8fafc; }
-        #qr-reader button { background-color: #0000ff; color: white; padding: 8px 16px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px;}
-
-        /* Toast de notificaciones */
-        #toast {
-            visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
-            border-radius: 8px; padding: 16px; position: fixed; z-index: 50; left: 50%; transform: translateX(-50%);
-            bottom: 30px; font-size: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: visibility 0.5s, opacity 0.5s linear; opacity: 0;
+        #qr-reader__scan_region { background: white; min-height: 200px; }
+        #qr-reader__dashboard { padding: 10px !important; background: var(--bg-tertiary); }
+        #qr-reader button {
+            background: var(--hepa-accent); color: white; padding: 8px 16px;
+            border-radius: var(--radius-sm); border: none; font-weight: 600;
+            cursor: pointer; margin-top: 10px; font-family: var(--font-sans); font-size: 13px;
+            transition: background var(--duration-fast) var(--ease-in-out);
         }
-        #toast.show { visibility: visible; opacity: 1; }
-        #toast.success { background-color: #10b981; }
-        #toast.error { background-color: #ef4444; }
+        #qr-reader button:hover { background: var(--hepa-accent-hover); }
+
+        /* Toast / Notificaciones */
+        #toast {
+            position: fixed; z-index: 9999; left: 50%; bottom: 24px;
+            transform: translateX(-50%) translateY(20px);
+            min-width: 280px; max-width: 90%; padding: 14px 20px;
+            border-radius: var(--radius-md); font-size: 14px; font-weight: 600;
+            text-align: center; color: #fff; box-shadow: var(--shadow-lg);
+            opacity: 0; visibility: hidden;
+            transition: all var(--duration-normal) var(--ease-out-expo);
+            pointer-events: none; will-change: transform, opacity;
+        }
+        #toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+        #toast.success { background: linear-gradient(135deg, #059669, #10b981); }
+        #toast.error { background: linear-gradient(135deg, #dc2626, #ef4444); }
+
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: var(--radius-full); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+        /* Asegurar que los modales se vean correctamente */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 50;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        .modal-overlay.dark {
+            background: rgba(0,0,0,0.75);
+        }
+
+        /* Responsive: en pantallas grandes centrar la app */
+        @media (min-width: 768px) {
+            body {
+                background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            }
+        }
     </style>
 </head>
-<body class="text-gray-800 h-screen overflow-hidden flex flex-col">
+<body>
 
     <!-- BARRA SUPERIOR -->
-    <header class="hepa-blue text-white p-4 shadow-md flex justify-between items-center z-10 shrink-0">
+    <header class="app-header hepa-blue text-white px-4 py-3 shadow-md flex justify-between items-center">
         <div class="flex items-center gap-3 cursor-pointer select-none" onclick="triggerSecretLogin()">
-            <div class="bg-white rounded-full p-2 h-10 w-10 flex items-center justify-center">
+            <div class="bg-white rounded-full p-2 h-10 w-10 flex items-center justify-center flex-shrink-0">
                 <i class="fa-solid fa-car text-hepa-blue text-xl"></i>
             </div>
-            <div>
-                <h1 class="font-bold leading-tight tracking-wide">Refaccionarias HEPA</h1>
+            <div class="min-w-0">
+                <h1 class="font-bold leading-tight tracking-wide text-sm sm:text-base truncate">Refaccionarias HEPA</h1>
                 <p class="text-xs text-blue-200">Control de Asistencia</p>
             </div>
         </div>
     </header>
 
     <!-- ÁREA DE CONTENIDO (Views) -->
-    <main class="flex-1 overflow-y-auto relative w-full max-w-md mx-auto bg-white shadow-xl">
+    <main class="app-content">
 
-        <!-- VISTA: SELECCIÓN DE ROL (NUEVA PANTALLA INICIAL) -->
-        <div id="view-role-selection" class="view active h-full flex flex-col justify-center p-6">
-            <div class="text-center mb-8">
-                <img src="img/Logo_HEPA.png" alt="Logo HEPA" class="h-32 mx-auto mb-6 object-contain drop-shadow-md">
-                <h2 class="text-2xl font-bold text-gray-800">Bienvenido</h2>
-                <p class="text-gray-500 text-sm">Por favor, selecciona tu perfil</p>
-            </div>
-            
-            <div class="grid grid-cols-1 gap-4">
-                <button onclick="selectRole('FIJO')" class="bg-white border-2 border-gray-200 text-gray-700 py-6 rounded-xl font-bold shadow-sm transition hover:border-blue-600 hover:text-blue-700 flex flex-col items-center gap-2">
-                    <i class="fa-solid fa-user-tie text-4xl text-hepa-blue"></i> Personal Fijo
-                </button>
-                <button onclick="selectRole('BECARIOS')" class="bg-white border-2 border-gray-200 text-gray-700 py-6 rounded-xl font-bold shadow-sm transition hover:border-green-600 hover:text-green-700 flex flex-col items-center gap-2">
-                    <i class="fa-solid fa-user-graduate text-4xl text-green-600"></i> Becarios
-                </button>
+        <!-- VISTA: SELECCIÓN DE ROL -->
+        <div id="view-role-selection" class="view active">
+            <div class="flex-1 flex flex-col justify-center px-6 py-8">
+                <div class="text-center mb-8">
+                    <img src="img/Logo_HEPA.png" alt="Logo HEPA" class="h-28 sm:h-32 mx-auto mb-6 object-contain drop-shadow-md">
+                    <h2 class="text-2xl font-bold text-gray-800">Bienvenido</h2>
+                    <p class="text-gray-500 text-sm mt-1">Por favor, selecciona tu perfil</p>
+                </div>
+                
+                <div class="space-y-4 px-2">
+                    <button onclick="selectRole('FIJO')" class="w-full bg-white border-2 border-gray-200 text-gray-700 py-5 rounded-xl font-bold shadow-sm transition-all duration-200 hover:border-blue-500 hover:text-blue-600 hover:shadow-md hover:-translate-y-0.5 flex flex-col items-center gap-2 active:scale-[0.98]">
+                        <i class="fa-solid fa-user-tie text-4xl text-hepa-blue"></i>
+                        <span>Personal Fijo</span>
+                    </button>
+                    <button onclick="selectRole('BECARIOS')" class="w-full bg-white border-2 border-gray-200 text-gray-700 py-5 rounded-xl font-bold shadow-sm transition-all duration-200 hover:border-green-500 hover:text-green-600 hover:shadow-md hover:-translate-y-0.5 flex flex-col items-center gap-2 active:scale-[0.98]">
+                        <i class="fa-solid fa-user-graduate text-4xl text-green-500"></i>
+                        <span>Becarios</span>
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- VISTA: ESCÁNER PRINCIPAL -->
-        <div id="view-scanner" class="view hidden h-full flex flex-col p-6">
-            <button onclick="showView('role-selection')" class="absolute top-4 left-4 text-gray-400 hover:text-gray-800 z-10">
-                <i class="fa-solid fa-arrow-left text-xl"></i>
-            </button>
-            <div class="text-center mb-6 mt-4">
-                <h2 class="text-2xl font-bold text-gray-800" id="scanner-title">Registro</h2>
-                <p class="text-gray-500 text-sm">Selecciona acción y escanea QR</p>
-            </div>
-
-            <!-- Botones de Acción -->
-            <div class="grid grid-cols-2 gap-3 mb-6">
-                <button onclick="selectAction('ENTRADA')" id="btn-ENTRADA" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition hover:border-blue-500 hover:text-blue-600 flex flex-col items-center gap-2">
-                    <i class="fa-solid fa-right-to-bracket text-2xl"></i> Entrada
+        <div id="view-scanner" class="view">
+            <div class="relative flex-1 flex flex-col px-5 py-5">
+                <!-- Botón Volver -->
+                <button onclick="showView('role-selection')" class="absolute top-2 left-3 text-gray-400 hover:text-gray-800 z-10 p-2 -ml-1" aria-label="Volver">
+                    <i class="fa-solid fa-arrow-left text-xl"></i>
                 </button>
-                <button onclick="selectAction('COMIDA_SALIDA')" id="btn-COMIDA_SALIDA" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition hover:border-yellow-500 hover:text-yellow-600 flex flex-col items-center gap-2">
-                    <i class="fa-solid fa-utensils text-2xl"></i> A Comer
-                </button>
-                <button onclick="selectAction('COMIDA_REGRESO')" id="btn-COMIDA_REGRESO" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition hover:border-green-500 hover:text-green-600 flex flex-col items-center gap-2">
-                    <i class="fa-solid fa-rotate-left text-2xl"></i> Regreso
-                </button>
-                <button onclick="selectAction('SALIDA')" id="btn-SALIDA" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition hover:border-red-500 hover:text-red-600 flex flex-col items-center gap-2">
-                    <i class="fa-solid fa-right-from-bracket text-2xl"></i> Salida
-                </button>
-            </div>
-
-            <!-- Contenedor del Escáner -->
-            <div id="scanner-container" class="hidden flex-col items-center w-full">
-                <div class="w-full bg-gray-100 rounded-xl overflow-hidden shadow-inner border-2 border-hepa-blue">
-                    <div id="qr-reader"></div>
+                
+                <div class="text-center mb-5 mt-2">
+                    <h2 class="text-2xl font-bold text-gray-800" id="scanner-title">Registro</h2>
+                    <p class="text-gray-500 text-sm">Selecciona acción y escanea QR</p>
                 </div>
-                <button onclick="stopScanner()" class="mt-4 text-red-500 font-semibold hover:underline">
-                    Cancelar Escaneo
-                </button>
-            </div>
 
-            <div id="waiting-action" class="flex-1 flex flex-col items-center justify-center text-gray-400">
-                <i class="fa-solid fa-qrcode text-6xl mb-4 opacity-50"></i>
-                <p>Selecciona un botón arriba para activar la cámara</p>
-            </div>
+                <!-- Botones de Acción -->
+                <div class="grid grid-cols-2 gap-3 mb-5">
+                    <button onclick="selectAction('ENTRADA')" id="btn-ENTRADA" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition-all duration-200 hover:border-blue-500 hover:text-blue-600 flex flex-col items-center gap-2 active:scale-[0.97]">
+                        <i class="fa-solid fa-right-to-bracket text-2xl"></i>
+                        <span class="text-sm">Entrada</span>
+                    </button>
+                    <button onclick="selectAction('COMIDA_SALIDA')" id="btn-COMIDA_SALIDA" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition-all duration-200 hover:border-yellow-500 hover:text-yellow-600 flex flex-col items-center gap-2 active:scale-[0.97]">
+                        <i class="fa-solid fa-utensils text-2xl"></i>
+                        <span class="text-sm">A Comer</span>
+                    </button>
+                    <button onclick="selectAction('COMIDA_REGRESO')" id="btn-COMIDA_REGRESO" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition-all duration-200 hover:border-green-500 hover:text-green-600 flex flex-col items-center gap-2 active:scale-[0.97]">
+                        <i class="fa-solid fa-rotate-left text-2xl"></i>
+                        <span class="text-sm">Regreso</span>
+                    </button>
+                    <button onclick="selectAction('SALIDA')" id="btn-SALIDA" class="action-btn bg-white border-2 border-gray-200 text-gray-700 py-4 rounded-xl font-bold shadow-sm transition-all duration-200 hover:border-red-500 hover:text-red-600 flex flex-col items-center gap-2 active:scale-[0.97]">
+                        <i class="fa-solid fa-right-from-bracket text-2xl"></i>
+                        <span class="text-sm">Salida</span>
+                    </button>
+                </div>
 
-            <!-- Respaldo Manual -->
-            <div class="mt-auto pt-6 border-t text-center">
-                <button onclick="toggleManualEntry()" class="text-sm text-blue-600 font-semibold">¿Falla la cámara? Ingreso Manual</button>
-                <div id="manual-entry" class="hidden mt-3 flex gap-2">
-                    <input type="text" id="manual-id" placeholder="ID del Empleado (Ej. EMP-001)" class="flex-1 border p-2 rounded-lg text-sm focus:outline-none focus:border-blue-500">
-                    <button onclick="processManualEntry()" class="bg-blue-600 text-white px-4 rounded-lg font-bold">OK</button>
+                <!-- Contenedor del Escáner -->
+                <div id="scanner-container" class="hidden flex-col items-center w-full mb-4">
+                    <div class="w-full bg-gray-100 rounded-xl overflow-hidden shadow-inner border-2 border-hepa-blue">
+                        <div id="qr-reader"></div>
+                    </div>
+                    <button onclick="stopScanner()" class="mt-3 text-red-500 font-semibold text-sm hover:underline py-2">
+                        <i class="fa-solid fa-xmark mr-1"></i>Cancelar Escaneo
+                    </button>
+                </div>
+
+                <div id="waiting-action" class="flex-1 flex flex-col items-center justify-center text-gray-400 py-8">
+                    <i class="fa-solid fa-qrcode text-6xl mb-4 opacity-30"></i>
+                    <p class="text-sm text-center px-4">Selecciona un botón arriba para activar la cámara</p>
+                </div>
+
+                <!-- Respaldo Manual -->
+                <div class="mt-auto pt-4 border-t border-gray-100 text-center">
+                    <button onclick="toggleManualEntry()" class="text-sm text-blue-600 font-semibold hover:text-blue-800 transition-colors py-2">
+                        <i class="fa-solid fa-keyboard mr-1"></i>¿Falla la cámara? Ingreso Manual
+                    </button>
+                    <div id="manual-entry" class="hidden mt-3 flex gap-2">
+                        <input type="text" id="manual-id" placeholder="ID del Empleado (Ej. EMP-001)" class="flex-1 border-2 border-gray-200 p-2.5 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition">
+                        <button onclick="processManualEntry()" class="bg-blue-600 text-white px-5 rounded-lg font-bold hover:bg-blue-700 transition-colors active:scale-95">OK</button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- VISTA: LOGIN ADMIN -->
-        <div id="view-admin-login" class="view hidden h-full flex flex-col items-center justify-center p-6">
-            <button onclick="showView('role-selection')" class="absolute top-4 left-4 text-gray-500 hover:text-gray-800">
-                <i class="fa-solid fa-arrow-left text-xl"></i> Volver
-            </button>
-            <div class="bg-gray-50 p-8 rounded-2xl shadow-md w-full max-w-xs text-center border">
-                <i class="fa-solid fa-shield-halved text-4xl text-hepa-blue mb-4"></i>
-                <h2 class="text-xl font-bold mb-6">Acceso Administrador</h2>
-                <input type="email" id="admin-email" placeholder="Correo Administrador" class="w-full border-2 border-gray-300 p-3 rounded-xl mb-2 text-lg focus:border-hepa-blue focus:outline-none">
-                <input type="password" id="admin-password" placeholder="Contraseña" class="w-full border-2 border-gray-300 p-3 rounded-xl mb-4 text-lg focus:border-hepa-blue focus:outline-none">
-                <button onclick="loginAdmin()" class="w-full hepa-blue text-white font-bold py-3 rounded-xl shadow-md hover:bg-blue-800 transition">
-                    Ingresar
+        <div id="view-admin-login" class="view">
+            <div class="flex-1 flex flex-col items-center justify-center px-6 py-8">
+                <button onclick="showView('role-selection')" class="self-start text-gray-500 hover:text-gray-800 mb-4 p-2 -ml-2" aria-label="Volver">
+                    <i class="fa-solid fa-arrow-left text-xl"></i>
                 </button>
+                <div class="bg-gray-50 p-8 rounded-2xl shadow-md w-full max-w-xs text-center border border-gray-200">
+                    <i class="fa-solid fa-shield-halved text-4xl text-hepa-blue mb-4"></i>
+                    <h2 class="text-xl font-bold mb-6 text-gray-800">Acceso Administrador</h2>
+                    <input type="email" id="admin-email" placeholder="Correo Administrador" class="w-full border-2 border-gray-300 p-3 rounded-xl mb-3 text-base focus:border-hepa-blue focus:outline-none focus:ring-1 focus:ring-hepa-blue transition" autocomplete="email">
+                    <input type="password" id="admin-password" placeholder="Contraseña" class="w-full border-2 border-gray-300 p-3 rounded-xl mb-5 text-base focus:border-hepa-blue focus:outline-none focus:ring-1 focus:ring-hepa-blue transition" autocomplete="current-password">
+                    <button onclick="loginAdmin()" class="w-full hepa-blue text-white font-bold py-3 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.98]">
+                        <i class="fa-solid fa-right-to-bracket mr-2"></i>Ingresar
+                    </button>
+                </div>
             </div>
         </div>
 
         <!-- VISTA: DASHBOARD ADMIN -->
-        <div id="view-admin-dashboard" class="view hidden h-full flex flex-col">
-            <div class="bg-gray-100 p-2 flex justify-between items-center border-b">
-                <button onclick="logoutAdmin()" class="text-gray-600 p-2"><i class="fa-solid fa-home"></i> Inicio</button>
-                <div class="flex bg-white rounded-lg shadow-sm p-1">
-                    <button onclick="switchAdminTab('logs')" id="tab-logs" class="px-4 py-1 rounded-md text-sm font-bold hepa-blue text-white">Registros</button>
-                    <button onclick="switchAdminTab('employees')" id="tab-employees" class="px-4 py-1 rounded-md text-sm font-bold text-gray-500 hover:bg-gray-50">Empleados</button>
-                </div>
-                <button onclick="logoutAdmin()" class="text-red-500 p-2"><i class="fa-solid fa-power-off"></i></button>
-            </div>
-
-            <!-- Tab Registros -->
-            <div id="admin-logs" class="flex-1 p-4 overflow-y-auto bg-gray-50">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-lg">Historial de Asistencia</h3>
-                    <div class="flex gap-2">
-                        <button onclick="exportToExcel()" class="bg-green-600 text-white p-2 rounded shadow hover:bg-green-700" title="Exportar Excel"><i class="fa-solid fa-file-excel"></i></button>
-                        <button onclick="exportToPDF()" class="bg-red-600 text-white p-2 rounded shadow hover:bg-red-700" title="Exportar PDF"><i class="fa-solid fa-file-pdf"></i></button>
-                        <button onclick="shareData()" class="bg-blue-500 text-white p-2 rounded shadow hover:bg-blue-600" title="Compartir"><i class="fa-solid fa-share-nodes"></i></button>
+        <div id="view-admin-dashboard" class="view">
+            <div class="flex flex-col h-full">
+                <!-- Barra superior del dashboard -->
+                <div class="bg-gray-100 px-3 py-2 flex justify-between items-center border-b border-gray-200 flex-shrink-0">
+                    <button onclick="logoutAdmin()" class="text-gray-600 hover:text-gray-900 p-2 transition-colors" aria-label="Inicio">
+                        <i class="fa-solid fa-house text-lg"></i>
+                    </button>
+                    <div class="flex bg-white rounded-lg shadow-sm p-0.5">
+                        <button onclick="switchAdminTab('logs')" id="tab-logs" class="px-4 py-1.5 rounded-md text-sm font-bold hepa-blue text-white transition-all">Registros</button>
+                        <button onclick="switchAdminTab('employees')" id="tab-employees" class="px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-700 transition-all">Empleados</button>
                     </div>
-                </div>
-                
-                <!-- PANEL DE FILTROS -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border mb-4">
-                    <h4 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Filtros de Búsqueda</h4>
-                    
-                    <!-- Buscador Texto -->
-                    <div class="mb-3">
-                        <input type="text" id="filter-text" placeholder="Buscar por Nombre o ID..." class="w-full border-2 border-gray-200 p-2 rounded-lg text-sm focus:outline-none focus:border-hepa-blue transition">
-                    </div>
-
-                    <!-- Fechas -->
-                    <div class="grid grid-cols-2 gap-3 mb-3">
-                        <div>
-                            <label class="text-xs text-gray-400 font-bold ml-1">Desde:</label>
-                            <input type="date" id="filter-date-start" class="w-full border-2 border-gray-200 p-2 rounded-lg text-sm focus:outline-none focus:border-hepa-blue transition">
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-400 font-bold ml-1">Hasta:</label>
-                            <input type="date" id="filter-date-end" class="w-full border-2 border-gray-200 p-2 rounded-lg text-sm focus:outline-none focus:border-hepa-blue transition">
-                        </div>
-                    </div>
-
-                    <!-- Checkboxes Acciones -->
-                    <div class="mb-4">
-                        <label class="text-xs text-gray-400 font-bold ml-1 block mb-2">Mostrar Acciones:</label>
-                        <div class="flex flex-wrap gap-3">
-                            <label class="flex items-center gap-1 text-sm bg-gray-50 px-2 py-1 rounded border cursor-pointer hover:bg-gray-100"><input type="checkbox" class="filter-action accent-blue-600" value="ENTRADA" checked> Entrada</label>
-                            <label class="flex items-center gap-1 text-sm bg-gray-50 px-2 py-1 rounded border cursor-pointer hover:bg-gray-100"><input type="checkbox" class="filter-action accent-yellow-500" value="COMIDA_SALIDA" checked> Salida Comida</label>
-                            <label class="flex items-center gap-1 text-sm bg-gray-50 px-2 py-1 rounded border cursor-pointer hover:bg-gray-100"><input type="checkbox" class="filter-action accent-green-500" value="COMIDA_REGRESO" checked> Regreso Comida</label>
-                            <label class="flex items-center gap-1 text-sm bg-gray-50 px-2 py-1 rounded border cursor-pointer hover:bg-gray-100"><input type="checkbox" class="filter-action accent-red-500" value="SALIDA" checked> Salida</label>
-                        </div>
-                    </div>
-
-                    <!-- Botones -->
-                    <div class="flex gap-2">
-                        <button onclick="applyFilters()" class="hepa-blue text-white px-4 py-2 rounded-lg text-sm font-bold flex-1 shadow hover:bg-blue-800 transition">
-                            <i class="fa-solid fa-filter mr-1"></i> Filtrar Resultados
-                        </button>
-                        <button onclick="clearFilters()" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-gray-200 transition border" title="Limpiar Filtros">
-                            <i class="fa-solid fa-eraser"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-                    <div id="logs-container" class="divide-y max-h-[60vh] overflow-y-auto">
-                        <!-- Los registros se inyectarán aquí -->
-                        <div class="p-4 text-center text-gray-400 text-sm">Cargando registros...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab Empleados -->
-            <div id="admin-employees" class="flex-1 p-4 overflow-y-auto bg-gray-50 hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-lg">Equipo HEPA</h3>
-                    <button onclick="prepareAddEmployee()" class="hepa-blue text-white px-3 py-1 rounded shadow text-sm font-bold">
-                        <i class="fa-solid fa-plus"></i> Nuevo
+                    <button onclick="logoutAdmin()" class="text-red-500 hover:text-red-700 p-2 transition-colors" aria-label="Cerrar sesión">
+                        <i class="fa-solid fa-power-off text-lg"></i>
                     </button>
                 </div>
-                <div id="employees-container" class="grid grid-cols-1 gap-3">
-                    <!-- Los empleados se inyectarán aquí -->
-                    <div class="text-center text-gray-400 text-sm">Cargando empleados...</div>
+
+                <!-- Tab Registros -->
+                <div id="admin-logs" class="flex-1 overflow-y-auto bg-gray-50">
+                    <div class="p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg text-gray-800">Historial de Asistencia</h3>
+                            <div class="flex gap-2">
+                                <button onclick="exportToExcel()" class="bg-emerald-600 text-white p-2.5 rounded-lg shadow-sm hover:bg-emerald-700 transition-all active:scale-95" title="Exportar Excel" aria-label="Exportar a Excel">
+                                    <i class="fa-solid fa-file-excel"></i>
+                                </button>
+                                <button onclick="exportToPDF()" class="bg-red-600 text-white p-2.5 rounded-lg shadow-sm hover:bg-red-700 transition-all active:scale-95" title="Exportar PDF" aria-label="Exportar a PDF">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </button>
+                                <button onclick="shareData()" class="bg-blue-500 text-white p-2.5 rounded-lg shadow-sm hover:bg-blue-600 transition-all active:scale-95" title="Compartir" aria-label="Compartir">
+                                    <i class="fa-solid fa-share-nodes"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- PANEL DE FILTROS -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-4">
+                            <h4 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Filtros de Búsqueda</h4>
+                            
+                            <!-- Buscador Texto -->
+                            <div class="mb-3">
+                                <input type="text" id="filter-text" placeholder="Buscar por Nombre o ID..." class="w-full border-2 border-gray-200 p-2.5 rounded-lg text-sm focus:outline-none focus:border-hepa-blue focus:ring-1 focus:ring-hepa-blue transition">
+                            </div>
+
+                            <!-- Fechas -->
+                            <div class="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label class="text-xs text-gray-400 font-semibold ml-1 block mb-1">Desde:</label>
+                                    <input type="date" id="filter-date-start" class="w-full border-2 border-gray-200 p-2.5 rounded-lg text-sm focus:outline-none focus:border-hepa-blue focus:ring-1 focus:ring-hepa-blue transition">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-gray-400 font-semibold ml-1 block mb-1">Hasta:</label>
+                                    <input type="date" id="filter-date-end" class="w-full border-2 border-gray-200 p-2.5 rounded-lg text-sm focus:outline-none focus:border-hepa-blue focus:ring-1 focus:ring-hepa-blue transition">
+                                </div>
+                            </div>
+
+                            <!-- Checkboxes Acciones -->
+                            <div class="mb-4">
+                                <label class="text-xs text-gray-400 font-semibold ml-1 block mb-2">Mostrar Acciones:</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <label class="flex items-center gap-1.5 text-sm bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors select-none">
+                                        <input type="checkbox" class="filter-action accent-blue-600" value="ENTRADA" checked> Entrada
+                                    </label>
+                                    <label class="flex items-center gap-1.5 text-sm bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors select-none">
+                                        <input type="checkbox" class="filter-action accent-yellow-500" value="COMIDA_SALIDA" checked> Salida Comida
+                                    </label>
+                                    <label class="flex items-center gap-1.5 text-sm bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors select-none">
+                                        <input type="checkbox" class="filter-action accent-green-500" value="COMIDA_REGRESO" checked> Regreso Comida
+                                    </label>
+                                    <label class="flex items-center gap-1.5 text-sm bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors select-none">
+                                        <input type="checkbox" class="filter-action accent-red-500" value="SALIDA" checked> Salida
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="flex gap-2">
+                                <button onclick="applyFilters()" class="hepa-blue text-white px-4 py-2.5 rounded-lg text-sm font-bold flex-1 shadow-sm hover:shadow-md transition-all active:scale-[0.98]">
+                                    <i class="fa-solid fa-filter mr-1"></i> Filtrar Resultados
+                                </button>
+                                <button onclick="clearFilters()" class="bg-gray-100 text-gray-600 px-4 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-200 transition-all border border-gray-200 active:scale-95" title="Limpiar Filtros" aria-label="Limpiar filtros">
+                                    <i class="fa-solid fa-eraser"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Lista de registros -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                            <div id="logs-container" class="divide-y divide-gray-100 max-h-[55vh] overflow-y-auto">
+                                <div class="p-6 text-center text-gray-400 text-sm">Cargando registros...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Empleados -->
+                <div id="admin-employees" class="flex-1 overflow-y-auto bg-gray-50 hidden">
+                    <div class="p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-lg text-gray-800">Equipo HEPA</h3>
+                            <button onclick="prepareAddEmployee()" class="hepa-blue text-white px-4 py-2 rounded-lg shadow-sm text-sm font-bold hover:shadow-md transition-all active:scale-95">
+                                <i class="fa-solid fa-plus mr-1"></i> Nuevo
+                            </button>
+                        </div>
+                        <div id="employees-container" class="space-y-3">
+                            <div class="text-center text-gray-400 text-sm py-8">Cargando empleados...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -254,24 +447,26 @@
     </main>
 
     <!-- MODAL: AGREGAR EMPLEADO -->
-    <div id="modal-add-employee" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative">
-            <button onclick="closeModal('modal-add-employee')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 id="modal-title" class="text-xl font-bold mb-4">Nuevo Empleado</h3>
-            <div class="space-y-3">
+    <div id="modal-add-employee" class="modal-overlay">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl relative animate-[fadeIn_0.2s_ease-out]">
+            <button onclick="closeModal('modal-add-employee')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors p-1" aria-label="Cerrar">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 id="modal-title" class="text-xl font-bold mb-5 text-gray-800">Nuevo Empleado</h3>
+            <div class="space-y-4">
                 <div>
-                    <label class="text-xs text-gray-500 font-bold">ID / Matrícula</label>
-                    <input type="text" id="new-emp-id" placeholder="Ej. HEPA-001" class="w-full border p-2 rounded-lg focus:outline-none focus:border-blue-500 uppercase">
+                    <label class="text-xs text-gray-500 font-bold block mb-1">ID / Matrícula</label>
+                    <input type="text" id="new-emp-id" placeholder="Ej. HEPA-001" class="w-full border-2 border-gray-200 p-2.5 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition uppercase text-sm">
                 </div>
                 <div>
-                    <label class="text-xs text-gray-500 font-bold">Nombre Completo</label>
-                    <input type="text" id="new-emp-name" placeholder="Juan Pérez" class="w-full border p-2 rounded-lg focus:outline-none focus:border-blue-500">
+                    <label class="text-xs text-gray-500 font-bold block mb-1">Nombre Completo</label>
+                    <input type="text" id="new-emp-name" placeholder="Juan Pérez" class="w-full border-2 border-gray-200 p-2.5 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition text-sm">
                 </div>
                 <div>
-                    <label class="text-xs text-gray-500 font-bold">Cargo</label>
-                    <input type="text" id="new-emp-role" placeholder="Mecánico, Ventas, etc." class="w-full border p-2 rounded-lg focus:outline-none focus:border-blue-500">
+                    <label class="text-xs text-gray-500 font-bold block mb-1">Cargo</label>
+                    <input type="text" id="new-emp-role" placeholder="Mecánico, Ventas, etc." class="w-full border-2 border-gray-200 p-2.5 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition text-sm">
                 </div>
-                <button id="btn-save-employee" onclick="saveEmployee()" class="w-full hepa-blue text-white font-bold py-2 rounded-lg shadow-md mt-2">
+                <button id="btn-save-employee" onclick="saveEmployee()" class="w-full hepa-blue text-white font-bold py-3 rounded-lg shadow-md mt-2 hover:shadow-lg transition-all active:scale-[0.98]">
                     Guardar y Generar QR
                 </button>
             </div>
@@ -279,12 +474,14 @@
     </div>
 
     <!-- MODAL: VER CÓDIGO QR -->
-    <div id="modal-view-qr" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl relative text-center">
-            <button onclick="closeModal('modal-view-qr')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="modal-view-qr" class="modal-overlay dark">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-xs shadow-2xl relative text-center animate-[fadeIn_0.2s_ease-out]">
+            <button onclick="closeModal('modal-view-qr')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800 transition-colors p-1" aria-label="Cerrar">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
             <h3 class="text-lg font-bold text-gray-800 mb-1" id="qr-emp-name">Nombre</h3>
             <p class="text-sm text-gray-500 mb-4" id="qr-emp-id">ID</p>
-            <div id="qr-code-canvas" class="flex justify-center bg-gray-100 p-4 rounded-xl border border-dashed border-gray-300"></div>
+            <div id="qr-code-canvas" class="flex justify-center bg-gray-100 p-4 rounded-xl border-2 border-dashed border-gray-300"></div>
             <p class="text-xs text-gray-400 mt-4">Imprime este código para el empleado.</p>
         </div>
     </div>
@@ -299,7 +496,6 @@
         import { getFirestore, collection, addDoc, doc, deleteDoc, onSnapshot, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Configuración de entorno y Firebase
-        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyDIGy-ScMQyta3prPdUnId7nTGa3fQxwCQ",
             authDomain: "asistenciabecarioshepa.firebaseapp.com",
@@ -307,13 +503,13 @@
             storageBucket: "asistenciabecarioshepa.firebasestorage.app",
             messagingSenderId: "179769905326",
             appId: "1:179769905326:web:652673b26c97e782539d3f"
-            };
+        };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = firebaseConfig.appId;
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = firebaseConfig.appId;
 
         // Rutas estrictas solicitadas
         const employeesPath = `artifacts/${appId}/public/data/hepa_employees`;
@@ -322,9 +518,9 @@ const appId = firebaseConfig.appId;
         // Variables de estado
         let currentUser = null;
         let employeesData = [];
-        let editingEmployeeId = null; // Para saber si estamos editando
+        let editingEmployeeId = null;
         let logsData = [];
-        let currentFilteredLogs = null; // Almacena el estado actual de los filtros
+        let currentFilteredLogs = null;
         let currentAction = null;
         let html5QrcodeScanner = null;
         let unsubscribeLogs = null;
@@ -353,8 +549,6 @@ const appId = firebaseConfig.appId;
 
         function loadFirebaseData() {
             if (!currentUser) return;
-
-            // Escuchar Empleados
             const empRef = collection(db, employeesPath);
             onSnapshot(empRef, (snapshot) => {
                 employeesData = snapshot.docs.map(doc => ({ firebaseId: doc.id, ...doc.data() }));
@@ -368,13 +562,11 @@ const appId = firebaseConfig.appId;
             unsubscribeLogs = onSnapshot(logRef, (snapshot) => {
                 logsData = snapshot.docs.map(doc => {
                     const data = doc.data();
-                    // Convertir Timestamp de Firestore a milisegundos para ordenar correctamente
                     const timestamp = data.serverTimestamp ? data.serverTimestamp.toMillis() : (data.timestamp || Date.now());
                     return { firebaseId: doc.id, ...data, timestamp };
                 });
-                // Ordenar en memoria (más recientes primero)
                 logsData.sort((a, b) => b.timestamp - a.timestamp);
-                window.applyFilters(); // Aplicar filtros al recibir nuevos datos
+                window.applyFilters();
             }, (error) => console.error("Error logs:", error));
         }
 
@@ -386,16 +578,19 @@ const appId = firebaseConfig.appId;
             window.renderLogs([]);
         }
 
-        // --- UTILIDADES DE SEGURIDAD ---
-        // Evita inyección de código HTML malicioso en nombres o IDs
         function escapeHtml(text) {
             if (!text) return text;
-            return text.toString().replace(/&/g, "&amp;")
-                       .replace(/</g, "&lt;").replace(/>/g, "&gt;")
-                       .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+            const map = {
+                '&': '\x26amp;',
+                '<': '\x26lt;',
+                '>': '\x26gt;',
+                '"': '\x26quot;',
+                "'": '\x26#039;'
+            };
+            return text.toString().replace(/[&<>"']/g, function(m) { return map[m]; });
         }
 
-        // --- FUNCIONES EXPUESTAS A WINDOW PARA HTML ---
+        // --- FUNCIONES EXPUESTAS A WINDOW ---
 
         window.showToast = (msg, type = 'success') => {
             const toast = document.getElementById("toast");
@@ -405,7 +600,6 @@ const appId = firebaseConfig.appId;
         };
 
         window.showView = (viewId) => {
-            // Regla rígida: Ocultar todo con 'hidden' primero
             document.querySelectorAll('.view').forEach(v => {
                 v.classList.remove('active');
                 v.classList.add('hidden');
@@ -417,7 +611,6 @@ const appId = firebaseConfig.appId;
                 target.classList.add('active');
             }
 
-            // Limpieza específica al volver al inicio
             if (viewId === 'role-selection') {
                 window.stopScanner();
             }
@@ -425,7 +618,7 @@ const appId = firebaseConfig.appId;
             if (viewId === 'scanner') {
                 document.getElementById('admin-email').value = '';
                 document.getElementById('admin-password').value = '';
-                window.stopScanner(); // Detiene cámara al salir
+                window.stopScanner();
                 currentAction = null;
                 updateActionUI();
             }
@@ -452,7 +645,6 @@ const appId = firebaseConfig.appId;
                 lunchBtns.forEach(id => document.getElementById(id).classList.add('hidden'));
                 document.getElementById('scanner-title').innerText = "Personal Fijo";
             } else {
-                // Becarios
                 lunchBtns.forEach(id => document.getElementById(id).classList.remove('hidden'));
                 document.getElementById('scanner-title').innerText = "Becarios";
             }
@@ -460,8 +652,7 @@ const appId = firebaseConfig.appId;
             window.showView('scanner');
         };
 
-        // --- LÓGICA DEL ESCÁNER Y REGISTRO ---
-
+        // --- LÓGICA DEL ESCÁNER ---
         window.selectAction = (action) => {
             currentAction = action;
             updateActionUI();
@@ -469,7 +660,6 @@ const appId = firebaseConfig.appId;
         };
 
         function updateActionUI() {
-            // Reset styles
             ['ENTRADA', 'COMIDA_SALIDA', 'COMIDA_REGRESO', 'SALIDA'].forEach(act => {
                 const btn = document.getElementById(`btn-${act}`);
                 btn.classList.remove('border-blue-500', 'border-yellow-500', 'border-green-500', 'border-red-500', 'bg-gray-50', 'scale-95');
@@ -491,8 +681,6 @@ const appId = firebaseConfig.appId;
         function startScanner() {
             if (html5QrcodeScanner) window.stopScanner();
             
-            // Usamos HTML5 Qrcode
-            const formatsToSupport = [ Html5QrcodeSupportedFormats.QR_CODE ];
             html5QrcodeScanner = new Html5Qrcode("qr-reader");
             
             const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
@@ -517,7 +705,6 @@ const appId = firebaseConfig.appId;
         };
 
         function onScanSuccess(decodedText) {
-            // Evitar múltiples escaneos rápidos
             if (html5QrcodeScanner && html5QrcodeScanner.isScanning) {
                 html5QrcodeScanner.stop().catch(console.error);
             }
@@ -545,31 +732,27 @@ const appId = firebaseConfig.appId;
         async function processAttendance(empId) {
             if (!currentUser) { window.showToast("Sistema desconectado", "error"); return; }
             
-            // Buscar empleado
             const employee = employeesData.find(e => e.id.toUpperCase() === empId.toUpperCase());
             if (!employee) {
                 window.showToast(`ID no registrado: ${empId}`, "error");
-                // Reset UI
                 currentAction = null; updateActionUI();
                 return;
             }
 
-            // Registrar en Firebase
             try {
                 const logData = {
                     employeeId: employee.id,
                     employeeName: employee.name,
                     employeeRole: employee.role,
                     action: currentAction,
-                    timestamp: Date.now(), // Respaldo local
-                    serverTimestamp: serverTimestamp(), // HORA SEGURA DEL SERVIDOR (Evita trampas de horario)
+                    timestamp: Date.now(),
+                    serverTimestamp: serverTimestamp(),
                     dateString: new Date().toLocaleDateString('es-MX'),
                     timeString: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
                 };
 
                 await addDoc(collection(db, logsPath), logData);
                 
-                // Mensaje amigable basado en acción
                 let actionText = "";
                 if(currentAction === 'ENTRADA') actionText = "Entrada registrada";
                 if(currentAction === 'COMIDA_SALIDA') actionText = "Salida a comer";
@@ -578,7 +761,6 @@ const appId = firebaseConfig.appId;
 
                 window.showToast(`✅ ${actionText} - ${employee.name}`);
                 
-                // Recargar la página automáticamente para reiniciar el ciclo
                 setTimeout(() => {
                     window.location.reload();
                 }, 1500);
@@ -590,7 +772,6 @@ const appId = firebaseConfig.appId;
         }
 
         // --- LÓGICA DE ADMINISTRADOR ---
-
         window.loginAdmin = async () => {
             const email = document.getElementById('admin-email').value;
             const password = document.getElementById('admin-password').value;
@@ -601,11 +782,9 @@ const appId = firebaseConfig.appId;
             }
 
             try {
-                // Configurar persistencia solo para la sesión actual (se borra al cerrar pestaña)
                 await setPersistence(auth, browserSessionPersistence);
                 await signInWithEmailAndPassword(auth, email, password);
                 
-                // Limpiar campos por seguridad
                 document.getElementById('admin-email').value = '';
                 document.getElementById('admin-password').value = '';
 
@@ -620,7 +799,7 @@ const appId = firebaseConfig.appId;
         window.logoutAdmin = async () => {
             unsubscribeFromLogs();
             await signOut(auth);
-            await signInAnonymously(auth); // Regresar a modo kiosco (anónimo)
+            await signInAnonymously(auth);
             window.showView('role-selection');
         };
 
@@ -629,10 +808,10 @@ const appId = firebaseConfig.appId;
             document.getElementById('admin-employees').classList.add('hidden');
             document.getElementById(`admin-${tab}`).classList.remove('hidden');
 
-            document.getElementById('tab-logs').className = "px-4 py-1 rounded-md text-sm font-bold text-gray-500 hover:bg-gray-50";
-            document.getElementById('tab-employees').className = "px-4 py-1 rounded-md text-sm font-bold text-gray-500 hover:bg-gray-50";
+            document.getElementById('tab-logs').className = "px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-700 transition-all";
+            document.getElementById('tab-employees').className = "px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-700 transition-all";
             
-            document.getElementById(`tab-${tab}`).className = "px-4 py-1 rounded-md text-sm font-bold hepa-blue text-white shadow";
+            document.getElementById(`tab-${tab}`).className = "px-4 py-1.5 rounded-md text-sm font-bold hepa-blue text-white transition-all";
         };
 
         // --- LÓGICA DE FILTROS ---
@@ -643,17 +822,13 @@ const appId = firebaseConfig.appId;
             const selectedActions = Array.from(document.querySelectorAll('.filter-action:checked')).map(cb => cb.value);
 
             currentFilteredLogs = logsData.filter(log => {
-                // 1. Filtro Texto (Nombre o ID)
                 const matchText = log.employeeName.toLowerCase().includes(text) || log.employeeId.toLowerCase().includes(text);
-                
-                // 2. Filtro Acción (Checkboxes)
                 const matchAction = selectedActions.includes(log.action);
 
-                // 3. Filtro Fecha (Rango)
                 let matchDate = true;
                 if (dateStartVal || dateEndVal) {
                     const logDate = new Date(log.timestamp);
-                    logDate.setHours(0,0,0,0); // Normalizar a medianoche para comparar solo fechas
+                    logDate.setHours(0,0,0,0);
                     
                     if (dateStartVal) {
                         const [y, m, d] = dateStartVal.split('-').map(Number);
@@ -681,8 +856,7 @@ const appId = firebaseConfig.appId;
             window.applyFilters();
         };
 
-        // --- RENDERIZADO DE DATOS ---
-
+        // --- RENDERIZADO ---
         window.renderLogs = (data = logsData) => {
             const container = document.getElementById('logs-container');
             if (!data || data.length === 0) {
@@ -700,22 +874,22 @@ const appId = firebaseConfig.appId;
                 if(log.action === 'SALIDA') { iconStr = '<i class="fa-solid fa-right-from-bracket text-red-500"></i>'; colorClass = 'text-red-700'; }
 
                 return `
-                <div class="p-3 flex items-center justify-between hover:bg-gray-50">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center">
+                <div class="p-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">
                             ${iconStr}
                         </div>
-                        <div>
-                            <p class="text-sm font-bold text-gray-800">${escapeHtml(log.employeeName)}</p>
-                            <p class="text-xs text-gray-500 font-mono">${escapeHtml(log.employeeId)} - ${log.action}</p>
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-gray-800 truncate">${escapeHtml(log.employeeName)}</p>
+                            <p class="text-xs text-gray-500 font-mono truncate">${escapeHtml(log.employeeId)} - ${log.action}</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-shrink-0">
                         <div class="text-right">
                             <p class="text-sm font-bold ${colorClass}">${log.timeString}</p>
                             <p class="text-xs text-gray-400">${log.dateString}</p>
                         </div>
-                        <button onclick="deleteLog('${log.firebaseId}')" class="text-gray-300 hover:text-red-500 p-2 transition" title="Eliminar registro">
+                        <button onclick="deleteLog('${log.firebaseId}')" class="text-gray-300 hover:text-red-500 p-2 transition-colors" title="Eliminar registro" aria-label="Eliminar registro">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -726,24 +900,24 @@ const appId = firebaseConfig.appId;
         window.renderEmployees = () => {
             const container = document.getElementById('employees-container');
             if (employeesData.length === 0) {
-                container.innerHTML = '<div class="text-center text-gray-400 text-sm p-4 bg-white rounded-xl shadow-sm border">No hay empleados registrados.</div>';
+                container.innerHTML = '<div class="text-center text-gray-400 text-sm p-6 bg-white rounded-xl shadow-sm border border-gray-200">No hay empleados registrados.</div>';
                 return;
             }
 
             container.innerHTML = employeesData.map(emp => `
-                <div class="bg-white p-3 rounded-xl shadow-sm border flex items-center justify-between">
-                    <div>
-                        <p class="font-bold text-gray-800">${escapeHtml(emp.name)}</p>
-                        <p class="text-xs text-gray-500">ID: ${escapeHtml(emp.id)} | ${escapeHtml(emp.role)}</p>
+                <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 flex items-center justify-between">
+                    <div class="min-w-0">
+                        <p class="font-bold text-gray-800 truncate">${escapeHtml(emp.name)}</p>
+                        <p class="text-xs text-gray-500 truncate">ID: ${escapeHtml(emp.id)} | ${escapeHtml(emp.role)}</p>
                     </div>
-                    <div class="flex gap-2">
-                        <button onclick="viewEmployeeQR('${emp.id}', '${emp.name}')" class="bg-gray-100 text-hepa-blue p-2 rounded-lg hover:bg-gray-200" title="Ver QR">
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button onclick="viewEmployeeQR('${emp.id}', '${emp.name}')" class="bg-gray-100 text-hepa-blue p-2 rounded-lg hover:bg-gray-200 transition-colors" title="Ver QR" aria-label="Ver QR">
                             <i class="fa-solid fa-qrcode"></i>
                         </button>
-                        <button onclick="editEmployee('${emp.firebaseId}')" class="bg-blue-50 text-blue-500 p-2 rounded-lg hover:bg-blue-100" title="Editar">
+                        <button onclick="editEmployee('${emp.firebaseId}')" class="bg-blue-50 text-blue-500 p-2 rounded-lg hover:bg-blue-100 transition-colors" title="Editar" aria-label="Editar empleado">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button onclick="deleteEmployee('${emp.firebaseId}')" class="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100" title="Eliminar">
+                        <button onclick="deleteEmployee('${emp.firebaseId}')" class="bg-red-50 text-red-500 p-2 rounded-lg hover:bg-red-100 transition-colors" title="Eliminar" aria-label="Eliminar empleado">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </div>
@@ -752,9 +926,12 @@ const appId = firebaseConfig.appId;
         };
 
         // --- GESTIÓN DE EMPLEADOS ---
-
-        window.openModal = (id) => { document.getElementById(id).classList.remove('hidden'); document.getElementById(id).classList.add('flex'); };
-        window.closeModal = (id) => { document.getElementById(id).classList.add('hidden'); document.getElementById(id).classList.remove('flex'); };
+        window.openModal = (id) => { 
+            document.getElementById(id).classList.add('open'); 
+        };
+        window.closeModal = (id) => { 
+            document.getElementById(id).classList.remove('open'); 
+        };
 
         window.prepareAddEmployee = () => {
             editingEmployeeId = null;
@@ -789,20 +966,16 @@ const appId = firebaseConfig.appId;
 
             if (!id || !name || !role) { window.showToast("Llena todos los campos", "error"); return; }
             
-            // Validar duplicados (excluyendo al actual si se está editando)
             const isDuplicate = employeesData.some(e => e.id === id && e.firebaseId !== editingEmployeeId);
             if (isDuplicate) { window.showToast("Ese ID ya existe", "error"); return; }
 
             try {
                 if (editingEmployeeId) {
-                    // Actualizar existente
                     await updateDoc(doc(db, employeesPath, editingEmployeeId), { id, name, role });
                     window.showToast("Empleado actualizado");
                 } else {
-                    // Crear nuevo
                     await addDoc(collection(db, employeesPath), { id, name, role, createdAt: Date.now() });
                     window.showToast("Empleado guardado");
-                    // Mostrar QR inmediatamente solo si es nuevo
                     window.viewEmployeeQR(id, name);
                 }
                 window.closeModal('modal-add-employee');
@@ -832,13 +1005,13 @@ const appId = firebaseConfig.appId;
             document.getElementById('qr-emp-id').innerText = `ID: ${empId}`;
             
             const canvasContainer = document.getElementById('qr-code-canvas');
-            canvasContainer.innerHTML = ''; // limpiar anterior
+            canvasContainer.innerHTML = '';
             
             qrcodeInstance = new QRCode(canvasContainer, {
                 text: empId,
                 width: 150,
                 height: 150,
-                colorDark : "#0000ff", // HEPA Blue
+                colorDark : "#0a1628",
                 colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
             });
@@ -846,11 +1019,8 @@ const appId = firebaseConfig.appId;
             window.openModal('modal-view-qr');
         };
 
-        // --- EXPORTACIÓN Y COMPARTIR ---
-
+        // --- EXPORTACIÓN ---
         function prepareDataForExport() {
-            // Transformar datos para tablas
-            // Usar datos filtrados si existen, de lo contrario usar todos
             return (currentFilteredLogs !== null ? currentFilteredLogs : logsData).map(log => [
                 log.dateString,
                 log.timeString,
@@ -873,7 +1043,7 @@ const appId = firebaseConfig.appId;
                 startY: 35,
                 head: [['Fecha', 'Hora', 'ID', 'Empleado', 'Acción']],
                 body: prepareDataForExport(),
-                headStyles: { fillColor: [0, 0, 255] } // HEPA Blue
+                headStyles: { fillColor: [10, 22, 40] }
             });
 
             doc.save("HEPA_Asistencia.pdf");
@@ -890,8 +1060,6 @@ const appId = firebaseConfig.appId;
         };
 
         window.shareData = async () => {
-            // Intentamos compartir un texto resumen, ya que compartir archivos dinámicos (File) vía Web Share API 
-            // no es compatible en todos los navegadores móviles aún.
             if (navigator.share) {
                 const dataToShare = currentFilteredLogs !== null ? currentFilteredLogs : logsData;
                 const textSummary = `Resumen HEPA:\nTotal registros: ${dataToShare.length}\nÚltimo registro: ${dataToShare[0]?.employeeName} a las ${dataToShare[0]?.timeString}`;
@@ -911,25 +1079,21 @@ const appId = firebaseConfig.appId;
         // Iniciar App
         initAuth();
 
-        // Registrar Service Worker con Auto-Update
+        // Registrar Service Worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js')
                 .then((registration) => {
                     console.log("Service Worker Registrado");
-
-                    // Detectar si hay una actualización esperando
                     registration.onupdatefound = () => {
                         const newWorker = registration.installing;
                         newWorker.onstatechange = () => {
                             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                // Nueva versión detectada, recargamos la página para aplicarla
                                 window.location.reload();
                             }
                         };
                     };
                 });
 
-            // Recargar si el controller cambia (otra medida de seguridad para actualizaciones)
             let refreshing;
             navigator.serviceWorker.addEventListener('controllerchange', () => {
                 if (refreshing) return;
